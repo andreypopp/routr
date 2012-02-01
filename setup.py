@@ -11,6 +11,10 @@ setup(
     author_email="8mayday@gmail.com",
     license="BSD",
     packages=find_packages(exclude=["ez_setup", "examples", "tests"]),
+    install_requires=[
+        "colander >= 0.9.5",
+        "WebOb >= 1.2b3"
+    ],
     include_package_data=True,
     test_suite="routr.tests",
     zip_safe=False)
