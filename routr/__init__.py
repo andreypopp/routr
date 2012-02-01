@@ -41,6 +41,8 @@ class NoMatchFound(Exception):
 class RouteNotFound(NoMatchFound):
     """ No route was matched for request"""
 
+    response = exc.HTTPNotFound()
+
 class RouteGuarded(NoMatchFound):
     """ There was matched routes but they were guarded
 
@@ -149,7 +151,7 @@ class Endpoint(Route):
             guard_kwargs = guard(request)
             if guard_kwargs:
                 kwargs.update(guard_kwargs)
-        return lambda view, request: self.view(**kwargs), self.view
+        return (lambda view, request: view(**kwargs)), self.view
 
     def __repr__(self):
         return "%s(view=%r, guards=%r, prefix=%r)" % (
