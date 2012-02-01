@@ -16,7 +16,7 @@ Example usage::
             [XHROnly]),
         [AuthRequired, GeoBlocking])
 
-    (args, kwargs), view = routing(request, raise404=True)
+    (args, kwargs), view = routing(request)
     return view(*args, **kwargs)
 
 """
