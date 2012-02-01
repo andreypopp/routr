@@ -11,7 +11,7 @@ Example usage::
         route("news", "myapp.views.news"),
         route("archive/{int}-{int}-{int}/", "myapp.views.archive"),
         route("api",
-            route("/news", "myapp.views.api.news", [QueryParams(id=Integer),
+            route("/news", "myapp.views.api.news", [QueryParams(id=Integer)]),
             route("myapp.views.api.comments", "/comments"),
             [XHROnly]),
         [AuthRequired, GeoBlocking])
