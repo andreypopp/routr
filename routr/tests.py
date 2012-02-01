@@ -3,7 +3,7 @@
 from unittest import TestCase
 from webob import Request, exc
 
-from routr.schema import Method
+from routr.schema import Method, QueryParams, String, Int, Optional
 from routr import RouteNotFound, RouteGuarded
 from routr import Route, Endpoint, RootEndpoint, RouteList
 from routr import route, ViewRef, RouteConfigurationError
@@ -65,6 +65,42 @@ class TestEndpoint(TestRouting):
         self.assertRaises(
             exc.HTTPMethodNotAllowed,
             r, Request.blank("/news", {"REQUEST_METHOD": "DELETE"}))
+
+    def test_param_pattern(self):
+        def view(id):
+            return id
+        r = route("/news/{int}/", view)
+        req = Request.blank("/news/42/")
+        (args, kwargs), view = r(req)
+        self.assertEqual(view(*args, **kwargs), 42)
+
+        self.assertNoMatch(r, Request.blank("/news/"))
+        self.assertNoMatch(r, Request.blank("/news/a/"))
+        self.assertNoMatch(r, Request.blank("/news//"))
+        self.assertNoMatch(r, Request.blank("/news/122"))
+
+    def test_param_guard(self):
+        def view(id, q=None, page=1):
+            return id, q, page
+        r = route(
+            "/news/{int}/", view,
+            [QueryParams(q=Optional(String), page=Optional(Int))])
+
+        req = Request.blank("/news/42/")
+        (args, kwargs), view = r(req)
+        self.assertEqual(view(*args, **kwargs), (42, None, 1))
+
+        req = Request.blank("/news/42/?q=search")
+        (args, kwargs), view = r(req)
+        self.assertEqual(view(*args, **kwargs), (42, "search", 1))
+
+        req = Request.blank("/news/42/?q=search&page=100")
+        (args, kwargs), view = r(req)
+        self.assertEqual(view(*args, **kwargs), (42, "search", 100))
+
+        self.assertRaises(
+            exc.HTTPBadRequest,
+            r, Request.blank("/news/42/?q=search&page=aa"))
 
 class TestRouteList(TestRouting):
 

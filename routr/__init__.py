@@ -24,38 +24,15 @@ Example usage::
     (args, kwargs), view = routing(request, raise404=True)
     return view(*args, **kwargs)
 
-    router(
-        "/news", "news_views",
-        Params(limit=schema.Integer) + AuthRequired.user_id)
-
 """
 
-from re import compile as re_compile
-from webob import exc
+from webob import exc as webobexc
+
+from routr.schema import URLPattern
+from routr.exc import NoMatchFound, RouteNotFound, RouteGuarded
+from routr.exc import RouteConfigurationError, InvalidRoutePattern
 
 __all__ = ("route", "NoMatchFound", "RouteConfigurationError")
-
-class NoMatchFound(Exception):
-    pass
-
-class RouteNotFound(NoMatchFound):
-    """ No route was matched for request"""
-
-    response = exc.HTTPNotFound()
-
-class RouteGuarded(NoMatchFound):
-    """ There was matched routes but they were guarded
-
-    :param response:
-        underlying response from guard, usually it's instance of
-        :class:``webob.exc.HTTPException``
-    """
-
-    def __init__(self, response):
-        self.response = response
-
-class RouteConfigurationError(Exception):
-    """ Improperly configured routes"""
 
 def route(*directives):
     """ Directive for configuring routes in application"""
@@ -111,15 +88,20 @@ class Route(object):
             return None
         if not prefix.startswith("/"):
             prefix = "/" + prefix
-        return re_compile(prefix)
+        return URLPattern(prefix)
 
     def match_prefix(self, path_info):
         if self.prefix is None:
-            return path_info, {}
-        m = self.prefix.match(path_info)
-        if not m:
-            raise RouteNotFound()
-        return path_info[m.end():], m.groupdict()
+            return path_info, ()
+        return self.prefix.match(path_info)
+
+    def match_guards(self, request):
+        kwargs = {}
+        for guard in self.guards:
+            guard_kwargs = guard(request)
+            if guard_kwargs:
+                kwargs.update(guard_kwargs)
+        return kwargs
 
     def __call__(self, request):
         """ Try to match route against ``request``
@@ -144,14 +126,11 @@ class Endpoint(Route):
         self.view = view
 
     def match(self, path_info, request):
-        path_info, kwargs = self.match_prefix(path_info)
+        path_info, args = self.match_prefix(path_info)
         if path_info:
             raise RouteNotFound()
-        for guard in self.guards:
-            guard_kwargs = guard(request)
-            if guard_kwargs:
-                kwargs.update(guard_kwargs)
-        return ((), kwargs), self.view
+        kwargs = self.match_guards(request)
+        return (args, kwargs), self.view
 
     def __repr__(self):
         return "%s(view=%r, guards=%r, prefix=%r)" % (
@@ -164,7 +143,7 @@ class RootEndpoint(Endpoint):
 
     def match_prefix(self, path_info):
         if not path_info or path_info == "/":
-            return "", {}
+            return "", ()
         raise RouteNotFound()
 
 class RouteList(Route):
@@ -175,18 +154,21 @@ class RouteList(Route):
         self.routes = routes
 
     def match(self, path_info, request):
-        path_info, _ = self.match_prefix(path_info)
+        path_info, args = self.match_prefix(path_info)
         guarded = []
+        kwargs = self.match_guards(request)
         for route in self.routes:
             try:
-                params, view = route.match(path_info, request)
+                (r_args, r_kwargs), view = route.match(path_info, request)
             except RouteNotFound:
                 continue
-            except exc.HTTPException, e:
+            except webobexc.HTTPException, e:
                 guarded.append(e)
                 continue
             else:
-                return params, view
+                kwargs.update(r_kwargs)
+                args = args + r_args
+                return (args, kwargs), view
         if guarded:
             # NOTE
             #   we raise now only first guard falure
