@@ -1,0 +1,12 @@
+
+  * guards now can generate kwargs for view, but isn't tested yet
+
+  * customize adaptation
+
+  * RouteList now doesn't check for guards
+
+  * how ew can combine kwargs from different guards? should we check it
+    statically (on configuration phase)
+
+  * let path_info pattern also be validated and provided via args, not kwargs
+
