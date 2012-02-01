@@ -3,7 +3,8 @@
 from unittest import TestCase
 from webob import Request, exc
 
-from routr import RouteNotFound, RouteGuarded, Method
+from routr.schema import Method
+from routr import RouteNotFound, RouteGuarded
 from routr import Route, Endpoint, RootEndpoint, RouteList
 from routr import route, ViewRef, RouteConfigurationError
 
@@ -24,8 +25,8 @@ class TestRootEnpoint(TestRouting):
             return "hello"
         r = route(view)
         req = Request.blank("/")
-        adapter, view = r(req)
-        self.assertEqual(adapter(view, req), "hello")
+        (args, kwargs), view = r(req)
+        self.assertEqual(view(*args, **kwargs), "hello")
 
     def test_no_match(self):
         def view():
@@ -41,8 +42,8 @@ class TestEndpoint(TestRouting):
             return "hello"
         r = route("news", view)
         req = Request.blank("/news")
-        adapter, view = r(req)
-        self.assertEqual(adapter(view, req), "hello")
+        (args, kwargs), view = r(req)
+        self.assertEqual(view(*args, **kwargs), "hello")
 
     def test_no_match(self):
         self.assertNoMatch(
@@ -58,8 +59,8 @@ class TestEndpoint(TestRouting):
         r = route("news", view, [Method("GET", "POST")])
 
         req = Request.blank("/news", {"REQUEST_METHOD": "POST"})
-        adapter, view = r(req)
-        self.assertEqual(adapter(view, req), "hello")
+        (args, kwargs), view = r(req)
+        self.assertEqual(view(*args, **kwargs), "hello")
 
         self.assertRaises(
             exc.HTTPMethodNotAllowed,
@@ -78,12 +79,12 @@ class TestRouteList(TestRouting):
             route("comments", comments))
 
         req = Request.blank("/news")
-        adapter, view = r(req)
-        self.assertEqual(adapter(view, req), "news")
+        (args, kwargs), view = r(req)
+        self.assertEqual(view(*args, **kwargs), "news")
 
         req = Request.blank("/comments")
-        adapter, view = r(req)
-        self.assertEqual(adapter(view, req), "comments")
+        (args, kwargs), view = r(req)
+        self.assertEqual(view(*args, **kwargs), "comments")
 
         self.assertNoMatch(r, "/newsweeek")
         self.assertNoMatch(r, "/ne")
@@ -106,20 +107,20 @@ class TestRouteList(TestRouting):
             route("comments", comments))
 
         req = Request.blank("/news")
-        adapter, view = r(req)
-        self.assertEqual(adapter(view, req), "news")
+        (args, kwargs), view = r(req)
+        self.assertEqual(view(*args, **kwargs), "news")
 
         req = Request.blank("/comments")
-        adapter, view = r(req)
-        self.assertEqual(adapter(view, req), "comments")
+        (args, kwargs), view = r(req)
+        self.assertEqual(view(*args, **kwargs), "comments")
 
         req = Request.blank("/api/news")
-        adapter, view = r(req)
-        self.assertEqual(adapter(view, req), "api_news")
+        (args, kwargs), view = r(req)
+        self.assertEqual(view(*args, **kwargs), "api_news")
 
         req = Request.blank("/api/comments")
-        adapter, view = r(req)
-        self.assertEqual(adapter(view, req), "api_comments")
+        (args, kwargs), view = r(req)
+        self.assertEqual(view(*args, **kwargs), "api_comments")
 
     def test_guards_inner(self):
         def news():
@@ -135,8 +136,8 @@ class TestRouteList(TestRouting):
             route("comments", comments_post, [Method("POST")]))
 
         req = Request.blank("/news", {"REQUEST_METHOD": "GET"})
-        adapter, view = r(req)
-        self.assertEqual(adapter(view, req), "news")
+        (args, kwargs), view = r(req)
+        self.assertEqual(view(*args, **kwargs), "news")
 
         req = Request.blank("/news", {"REQUEST_METHOD": "POST"})
         self.assertRaises(
@@ -144,8 +145,8 @@ class TestRouteList(TestRouting):
             r, req)
 
         req = Request.blank("/comments", {"REQUEST_METHOD": "POST"})
-        adapter, view = r(req)
-        self.assertEqual(adapter(view, req), "comments_post")
+        (args, kwargs), view = r(req)
+        self.assertEqual(view(*args, **kwargs), "comments_post")
 
         req = Request.blank("/comments", {"REQUEST_METHOD": "DELETE"})
         self.assertRaises(

@@ -21,8 +21,8 @@ Example usage::
             [XHROnly]),
         [AuthRequired, GeoBlocking])
 
-    adapter, view = routing(request, raise404=True)
-    return adapter(view, request)
+    (args, kwargs), view = routing(request, raise404=True)
+    return view(*args, **kwargs)
 
     router(
         "/news", "news_views",
@@ -151,7 +151,7 @@ class Endpoint(Route):
             guard_kwargs = guard(request)
             if guard_kwargs:
                 kwargs.update(guard_kwargs)
-        return (lambda view, request: view(**kwargs)), self.view
+        return ((), kwargs), self.view
 
     def __repr__(self):
         return "%s(view=%r, guards=%r, prefix=%r)" % (
@@ -179,14 +179,14 @@ class RouteList(Route):
         guarded = []
         for route in self.routes:
             try:
-                adapter, view = route.match(path_info, request)
+                params, view = route.match(path_info, request)
             except RouteNotFound:
                 continue
             except exc.HTTPException, e:
                 guarded.append(e)
                 continue
             else:
-                return adapter, view
+                return params, view
         if guarded:
             # NOTE
             #   we raise now only first guard falure
@@ -317,15 +317,3 @@ class ViewRef(object):
 
     def __call__(self, *args, **kwargs):
         return self.view(*args, **kwargs)
-
-class Method(object):
-
-    def __init__(self, *allowed):
-        self.allowed = allowed
-
-    def __call__(self, request):
-        if not request.method in self.allowed:
-            raise exc.HTTPMethodNotAllowed()
-
-    def __repr__(self):
-        return "%s(%s)" % (self.__class__.__name__, ", ".join(self.allowed))
