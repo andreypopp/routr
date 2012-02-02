@@ -83,7 +83,6 @@ class URLPattern(object):
     }
 
     def __init__(self, pattern):
-        self._c = 0
         self._names = []
         self.pattern, self.schema = self.compile_pattern(pattern)
 
@@ -102,14 +101,13 @@ class URLPattern(object):
         compiled = ""
         schema = SchemaNode(Tuple())
         last = 0
-        for m in self._type_re.finditer(pattern):
+        for n, m in enumerate(self._type_re.finditer(pattern)):
             compiled += pattern[last:m.start()]
             typ = m.group(1)
             if not typ in self.typ_typ_map:
                 raise InvalidRoutePattern(pattern)
             t, r = self.typ_typ_map[typ]
-            self._c = self._c + 1
-            name = "_gpt%d" % self._c
+            name = "_gpt%d" % n
             schema.add(SchemaNode(t))
             self._names.append(name)
             compiled += "(?P<%s>%s)" % (name, r)
