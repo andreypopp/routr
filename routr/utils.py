@@ -1,5 +1,7 @@
 """ Utility code"""
 
+import sys
+
 __all__ = ("import_string", "cached_property")
 
 class cached_property(object):
