@@ -4,7 +4,7 @@ from re import compile as re_compile
 from webob import exc
 from colander import * # re-export
 
-from routr.exc import InvalidRoutePattern, RouteNotFound
+from routr.exc import InvalidRoutePattern, NoURLPatternMatched
 
 __all__ = ("QueryParams", "Optional", "Method")
 
@@ -89,13 +89,13 @@ class URLPattern(object):
     def match(self, path_info):
         m = self.pattern.match(path_info)
         if not m:
-            raise RouteNotFound()
+            raise NoURLPatternMatched()
         groups = m.groupdict()
         args = tuple(groups[n] for n in self._names)
         try:
             return path_info[m.end():], self.schema.deserialize(args)
         except Invalid, e:
-            raise RouteNotFound()
+            raise NoURLPatternMatched()
 
     def compile_pattern(self, pattern):
         compiled = ""

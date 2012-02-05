@@ -4,7 +4,7 @@ from webob import exc as webobexc
 
 from routr.schema import URLPattern
 from routr.utils import import_string, cached_property
-from routr.exc import NoMatchFound, RouteNotFound, RouteGuarded
+from routr.exc import NoMatchFound, NoURLPatternMatched, RouteGuarded
 from routr.exc import RouteConfigurationError, InvalidRoutePattern
 
 __all__ = ("route",)
@@ -103,7 +103,7 @@ class Endpoint(Route):
     def match(self, path_info, request):
         path_info, args = self.match_prefix(path_info)
         if path_info:
-            raise RouteNotFound()
+            raise NoURLPatternMatched()
         kwargs = self.match_guards(request)
         return (args, kwargs), self.view
 
@@ -119,7 +119,7 @@ class RootEndpoint(Endpoint):
     def match_prefix(self, path_info):
         if not path_info or path_info == "/":
             return "", ()
-        raise RouteNotFound()
+        raise NoURLPatternMatched()
 
 class RouteList(Route):
     """ List of routes"""
@@ -135,7 +135,7 @@ class RouteList(Route):
         for route in self.routes:
             try:
                 (r_args, r_kwargs), view = route.match(path_info, request)
-            except RouteNotFound:
+            except NoURLPatternMatched:
                 continue
             except webobexc.HTTPException, e:
                 guarded.append(e)
@@ -149,7 +149,7 @@ class RouteList(Route):
             #   we raise now only first guard falure
             #   this is the place we might want more
             raise RouteGuarded(guarded[0])
-        raise RouteNotFound()
+        raise NoURLPatternMatched()
 
     def __repr__(self):
         return "%s(routes=%r, guards=%r, prefix=%r)" % (

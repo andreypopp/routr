@@ -4,7 +4,7 @@ from unittest import TestCase
 from webob import Request, exc
 
 from routr.schema import Method, QueryParams, String, Int, Optional
-from routr import RouteNotFound, RouteGuarded
+from routr import NoURLPatternMatched, RouteGuarded
 from routr import Route, Endpoint, RootEndpoint, RouteList
 from routr import route, ViewRef, RouteConfigurationError
 
@@ -14,9 +14,9 @@ class TestRouting(TestCase):
 
     def assertNoMatch(self, r, url):
         if isinstance(url, Request):
-            self.assertRaises(RouteNotFound, r, url)
+            self.assertRaises(NoURLPatternMatched, r, url)
         else:
-            self.assertRaises(RouteNotFound, r, Request.blank(url))
+            self.assertRaises(NoURLPatternMatched, r, Request.blank(url))
 
 class TestRootEnpoint(TestRouting):
 
@@ -33,7 +33,7 @@ class TestRootEnpoint(TestRouting):
             return "hello"
         r = route(view)
         req = Request.blank("/news")
-        self.assertRaises(RouteNotFound, r, req)
+        self.assertRaises(NoURLPatternMatched, r, req)
 
 class TestEndpoint(TestRouting):
 

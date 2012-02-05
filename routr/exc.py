@@ -7,16 +7,22 @@ __all__ = (
     "RouteConfigurationError", "InvalidRoutePattern")
 
 class NoMatchFound(Exception):
+    """ Raised when request wasn't matched against any route
+
+    :attr response:
+        :class:`webob.Response` object to return to client
+    """
 
     response = NotImplemented
 
-class RouteNotFound(NoMatchFound):
-    """ No route was matched for request"""
+class NoURLPatternMatched(NoMatchFound):
+    """ Raised when request wasn't matched against any URL pattern"""
 
     response = exc.HTTPNotFound()
 
 class RouteGuarded(NoMatchFound):
-    """ There was matched routes but they were guarded
+    """ Raised when request was matched against URL pattern of one or more
+    routes but was guarded
 
     :param response:
         underlying response from guard, usually it's instance of
@@ -27,7 +33,11 @@ class RouteGuarded(NoMatchFound):
         self.response = response
 
 class RouteConfigurationError(Exception):
-    """ Improperly configured routes"""
+    """ Routes were configured improperly
+
+    Errors of such type can be only raised during initial configuration and not
+    during runtime.
+    """
 
 class InvalidRoutePattern(RouteConfigurationError):
-    """ Invalid route pattern"""
+    """ Route configured with invalid route pattern"""
