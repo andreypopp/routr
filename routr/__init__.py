@@ -168,5 +168,9 @@ class ViewRef(object):
             return self.view_ref
         return import_string(self.view_ref)
 
+    @property
+    def __doc__(self):
+        return self.view.__doc__
+
     def __call__(self, *args, **kwargs):
         return self.view(*args, **kwargs)
