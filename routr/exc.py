@@ -3,7 +3,7 @@
 from webob import exc
 
 __all__ = (
-    "NoMatchFound", "RouteNotFound", "RouteGuarded",
+    "NoMatchFound", "NoURLPatternMatched", "RouteGuarded",
     "RouteConfigurationError", "InvalidRoutePattern")
 
 class NoMatchFound(Exception):
