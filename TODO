@@ -1,12 +1,9 @@
 
-  * guards now can generate kwargs for view, but isn't tested yet
+  * provide tests for guards injecting kwargs for view
 
-  * customize adaptation
+  * what about making Method guard special (like URLPattern) and make it
+    mandatory, GET by default
 
-  * RouteList now doesn't check for guards
+  * optional docstrings for routes
 
-  * how ew can combine kwargs from different guards? should we check it
-    statically (on configuration phase)
-
-  * let path_info pattern also be validated and provided via args, not kwargs
-
+  * introspection for guards or just make them able to generate documentation
