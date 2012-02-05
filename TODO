@@ -1,4 +1,8 @@
 
+  * reversing routes into URLs
+
+  * maybe we should restrict route patterns to typed placeholders, no regexes
+
   * provide tests for guards injecting kwargs for view
 
   * what about making Method guard special (like URLPattern) and make it
