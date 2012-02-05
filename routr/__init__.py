@@ -1,25 +1,4 @@
-""" `routr` package
-
-Example usage::
-
-    from routr import route
-    from routr import QueryParams, Method
-    from myapp.utils import AuthRequired, XHROnly, GeoBlocking
-
-    routing = route(
-        route("myapp.views.index"),
-        route("news", "myapp.views.news"),
-        route("archive/{int}-{int}-{int}/", "myapp.views.archive"),
-        route("api",
-            route("/news", "myapp.views.api.news", [QueryParams(id=Integer)]),
-            route("myapp.views.api.comments", "/comments"),
-            [XHROnly]),
-        [AuthRequired, GeoBlocking])
-
-    (args, kwargs), view = routing(request)
-    return view(*args, **kwargs)
-
-"""
+""" `routr` package"""
 
 from webob import exc as webobexc
 
