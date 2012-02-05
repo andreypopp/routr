@@ -83,21 +83,24 @@ class URLPattern(object):
     }
 
     def __init__(self, pattern):
-        self._names = []
-        self.pattern, self.schema = self.compile_pattern(pattern)
+        self.pattern = pattern
+        (self._compiled,
+         self._schema,
+         self._names) = self.compile_pattern(pattern)
 
     def match(self, path_info):
-        m = self.pattern.match(path_info)
+        m = self._compiled.match(path_info)
         if not m:
             raise NoURLPatternMatched()
         groups = m.groupdict()
         args = tuple(groups[n] for n in self._names)
         try:
-            return path_info[m.end():], self.schema.deserialize(args)
+            return path_info[m.end():], self._schema.deserialize(args)
         except Invalid, e:
             raise NoURLPatternMatched()
 
     def compile_pattern(self, pattern):
+        names = []
         compiled = ""
         schema = SchemaNode(Tuple())
         last = 0
@@ -107,10 +110,10 @@ class URLPattern(object):
             if not typ in self.typ_typ_map:
                 raise InvalidRoutePattern(pattern)
             t, r = self.typ_typ_map[typ]
-            name = "_gpt%d" % n
             schema.add(SchemaNode(t))
-            self._names.append(name)
+            name = "_gpt%d" % n
+            names.append(name)
             compiled += "(?P<%s>%s)" % (name, r)
             last = m.end()
         compiled += pattern[last:]
-        return re_compile(compiled), schema
+        return re_compile(compiled), schema, names
