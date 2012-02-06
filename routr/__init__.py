@@ -12,7 +12,7 @@ from routr.utils import import_string, cached_property
 from routr.exc import NoMatchFound, NoURLPatternMatched, RouteGuarded
 from routr.exc import RouteConfigurationError, InvalidRoutePattern
 
-__all__ = ("route",)
+__all__ = ("route", "Route", "Endpoint", "RootEndpoint", "RouteList")
 
 def route(*directives):
     """ Directive for configuring routes in application"""

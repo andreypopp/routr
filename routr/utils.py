@@ -1,8 +1,13 @@
-""" Utility code"""
+"""
+
+    routr.utilities -- utility code
+    ===============================
+
+"""
 
 import sys
 
-__all__ = ("import_string", "cached_property")
+__all__ = ("import_string", "cached_property", "ImportStringError")
 
 class cached_property(object):
     """ Just like ``property`` but computed only once"""

@@ -1,4 +1,9 @@
-""" ``routr.schema``"""
+"""
+
+    routr.schema -- constrain routes
+    ================================
+
+"""
 
 from re import compile as re_compile
 from webob import exc
@@ -6,7 +11,7 @@ from colander import * # re-export
 
 from routr.exc import InvalidRoutePattern, NoURLPatternMatched
 
-__all__ = ("QueryParams", "Optional", "Method")
+__all__ = ("QueryParams", "Optional", "Method", "URLPattern")
 
 _none = object()
 

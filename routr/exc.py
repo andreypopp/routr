@@ -1,4 +1,9 @@
-""" Exceptions"""
+"""
+
+    routr.exc -- exceptions
+    =======================
+
+"""
 
 from webob import exc
 
