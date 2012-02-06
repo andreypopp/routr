@@ -1,4 +1,9 @@
-""" `routr` package"""
+"""
+
+    routr -- define routes
+    ======================
+
+"""
 
 from webob import exc as webobexc
 
@@ -52,7 +57,13 @@ def route(*directives):
         raise RouteConfigurationError("improper usage of 'route' directive")
 
 class Route(object):
-    """ Base class for routes"""
+    """ Base class for routes
+
+    :param guards:
+        a list of guards for route
+    :param prefix:
+        URL prefix to match for route
+    """
 
     def __init__(self, guards, prefix=None):
         self.guards = guards
@@ -81,11 +92,11 @@ class Route(object):
     def __call__(self, request):
         """ Try to match route against ``request``
 
-        If no route was matched the :class:``.NoMatchFound`` exception will be
-        raised.
+        If no route was matched the :class:`routr.exc.NoMatchFound` exception
+        will be raised.
 
         :param request:
-            :class:``webob.Request`` object to match against
+            :class:`webob.Request` object to match route against
         """
         path_info = request.path_info
         return self.match(path_info, request)
@@ -115,6 +126,7 @@ class Endpoint(Route):
     __str__ = __repr__
 
 class RootEndpoint(Endpoint):
+    """ Root route endpoint"""
 
     def match_prefix(self, path_info):
         if not path_info or path_info == "/":
@@ -122,7 +134,10 @@ class RootEndpoint(Endpoint):
         raise NoURLPatternMatched()
 
 class RouteList(Route):
-    """ List of routes"""
+    """ Route which represents a list of other routes
+
+    Can have its own ``guards`` and URL ``prefix``.
+    """
 
     def __init__(self, routes, guards, prefix=None):
         super(RouteList, self).__init__(guards, prefix)
@@ -158,6 +173,11 @@ class RouteList(Route):
     __str__ = __repr__
 
 class ViewRef(object):
+    """ View reference
+
+    :param view_ref:
+        import spec or callable to reference to
+    """
 
     def __init__(self, view_ref):
         self.view_ref = view_ref
