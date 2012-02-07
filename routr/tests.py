@@ -12,7 +12,8 @@ from routr.schema import QueryParams, String, Int, Optional
 from routr import Route, Endpoint, RootEndpoint, RouteGroup
 from routr import route, ViewRef, RouteConfigurationError
 from routr import POST, GET
-from routr.exc import NoURLPatternMatched, RouteGuarded, MethodNotAllowed
+from routr.exc import (
+    NoURLPatternMatched, RouteGuarded, MethodNotAllowed, RouteReversalError)
 
 __all__ = ()
 
@@ -25,6 +26,11 @@ class TestRouting(TestCase):
             self.assertRaises(NoURLPatternMatched, r, Request.blank(url))
 
 class TestRootEnpoint(TestRouting):
+
+    def test_reverse(self):
+        r = route("view", name="news")
+        self.assertEqual(r.reverse("news"), "/")
+        self.assertRaises(RouteReversalError, r.reverse, "news2")
 
     def test_match(self):
         def view():
@@ -42,6 +48,11 @@ class TestRootEnpoint(TestRouting):
         self.assertRaises(NoURLPatternMatched, r, req)
 
 class TestEndpoint(TestRouting):
+
+    def test_reverse(self):
+        r = route("news", "view", name="news")
+        self.assertEqual(r.reverse("news"), "/news")
+        self.assertRaises(RouteReversalError, r.reverse, "news2")
 
     def test_match(self):
         def view():
@@ -109,6 +120,14 @@ class TestEndpoint(TestRouting):
             r, Request.blank("/news/42/?q=search&page=aa"))
 
 class TestRouteGroup(TestRouting):
+
+    def test_reverse(self):
+        r = route("api",
+            route("news", "news", name="news"),
+            route("comments", "comments", name="comments"))
+        self.assertEqual(r.reverse("news"), "/api/news")
+        self.assertEqual(r.reverse("comments"), "/api/comments")
+        self.assertRaises(RouteReversalError, r.reverse, "a")
 
     def test_simple(self):
         def news():

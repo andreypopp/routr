@@ -11,7 +11,8 @@ from routr.schema import URLPattern
 from routr.utils import import_string, cached_property
 from routr.exc import (
     NoMatchFound, NoURLPatternMatched, RouteGuarded,
-    MethodNotAllowed, RouteConfigurationError, InvalidRoutePattern)
+    MethodNotAllowed, RouteConfigurationError, InvalidRoutePattern,
+    RouteReversalError)
 
 __all__ = (
     "route", "Route", "Endpoint", "RootEndpoint", "RouteGroup",
@@ -27,7 +28,7 @@ TRACE = "TRACE"
 
 _http_methods = set([GET, POST, PUT, DELETE, HEAD, OPTIONS, TRACE])
 
-def route(*directives):
+def route(*directives, **kwargs):
     """ Directive for configuring routes in application"""
     directives = list(directives)
     if not directives:
@@ -49,17 +50,20 @@ def route(*directives):
             or hasattr(d, "__call__")
                 and not isinstance(d, Route))
 
+    name = kwargs.pop("name", None)
+
     # root directive
     if len(directives) == 1 and is_view_ref(directives[0]):
         view = directives[0]
-        return RootEndpoint(ViewRef(view), method or GET, guards)
+        return RootEndpoint(ViewRef(view), method or GET, name, guards)
 
     # endpoint directive
     elif (len(directives) == 2
             and isinstance(directives[0], str)
             and is_view_ref(directives[1])):
         prefix, view = directives
-        return Endpoint(ViewRef(view), method or GET, guards, prefix=prefix)
+        return Endpoint(
+            ViewRef(view), method or GET, name, guards, prefix=prefix)
 
     # route list with prefix
     elif (len(directives) > 1
@@ -96,6 +100,10 @@ class Route(object):
         self.guards = guards
         self.prefix = self.compile_prefix(prefix)
 
+    @property
+    def pattern(self):
+        return self.prefix.pattern if self.prefix else None
+
     def compile_prefix(self, prefix):
         if not prefix:
             return None
@@ -131,13 +139,17 @@ class Route(object):
     def match(self, request):
         raise NotImplementedError()
 
+    def reverse(self, name):
+        raise NotImplementedError()
+
 class Endpoint(Route):
     """ Endpoint route"""
 
-    def __init__(self, view, method, guards, prefix=None):
+    def __init__(self, view, method, name, guards, prefix=None):
         super(Endpoint, self).__init__(guards, prefix)
         self.view = view
         self.method = method
+        self.name = name
 
     def match(self, path_info, request):
         path_info, args = self.match_prefix(path_info)
@@ -147,6 +159,11 @@ class Endpoint(Route):
             raise MethodNotAllowed()
         kwargs = self.match_guards(request)
         return (args, kwargs), self.view
+
+    def reverse(self, name):
+        if name == self.name:
+            return self.prefix.pattern if self.prefix else "/"
+        raise RouteReversalError()
 
     def __repr__(self):
         return "%s(view=%r, guards=%r, prefix=%r)" % (
@@ -172,6 +189,33 @@ class RouteGroup(Route):
     def __init__(self, routes, guards, prefix=None):
         super(RouteGroup, self).__init__(guards, prefix)
         self.routes = routes
+
+    def index(self):
+        """ Return mapping from route name to actual route"""
+        idx = {}
+        for r in self.routes:
+            if isinstance(r, Endpoint) and r.name:
+                if r.name in idx:
+                    raise RouteConfigurationError(
+                        "route this name '%s' already defined")
+                idx[r.name] = join(self.pattern, r.pattern)
+            elif isinstance(r, RouteGroup):
+                ridx = r.index()
+                if set(ridx) & set(idx):
+                    raise RouteConfigurationError(
+                        "route this name '%s' already defined")
+                for (n, u) in ridx.items():
+                    idx[n] = join(self.pattern, u)
+        return idx
+
+    @cached_property
+    def _cached_index(self):
+        return self.index()
+
+    def reverse(self, name):
+        if not name in self._cached_index:
+            raise RouteReversalError()
+        return self._cached_index[name]
 
     def match(self, path_info, request):
         path_info, args = self.match_prefix(path_info)
@@ -227,3 +271,10 @@ class ViewRef(object):
 
     def __call__(self, *args, **kwargs):
         return self.view(*args, **kwargs)
+
+def join(a, b):
+    a = a or ""
+    b = b or ""
+    a = a[:-1] if a.endswith("/") else a
+    b = b[1:] if b.startswith("/") else b
+    return a + "/" + b
