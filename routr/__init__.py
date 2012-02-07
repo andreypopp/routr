@@ -6,6 +6,8 @@
 """
 
 import re
+from urllib import urlencode
+
 from webob.exc import HTTPException
 from routr.utils import import_string, cached_property
 from routr.exc import (
@@ -138,7 +140,7 @@ class Route(object):
     def match(self, request):
         raise NotImplementedError()
 
-    def reverse(self, name):
+    def reverse(self, name, *args, **kwargs):
         raise NotImplementedError()
 
 class Endpoint(Route):
@@ -159,10 +161,13 @@ class Endpoint(Route):
         kwargs = self.match_guards(request)
         return (args, kwargs), self.view
 
-    def reverse(self, name):
-        if name == self.name:
-            return self.prefix.pattern if self.prefix else "/"
-        raise RouteReversalError()
+    def reverse(self, name, *args, **kwargs):
+        if name != self.name:
+            raise RouteReversalError()
+        url = self.prefix.reverse(*args) if self.prefix else "/"
+        if kwargs:
+            url += "?" + urlencode(kwargs)
+        return url
 
     def __repr__(self):
         return "%s(view=%r, guards=%r, prefix=%r)" % (
@@ -197,24 +202,27 @@ class RouteGroup(Route):
                 if r.name in idx:
                     raise RouteConfigurationError(
                         "route this name '%s' already defined")
-                idx[r.name] = join(self.pattern, r.pattern)
+                idx[r.name] = self.prefix + r.prefix
             elif isinstance(r, RouteGroup):
                 ridx = r.index()
                 if set(ridx) & set(idx):
                     raise RouteConfigurationError(
                         "route this name '%s' already defined")
                 for (n, u) in ridx.items():
-                    idx[n] = join(self.pattern, u)
+                    idx[n] = self.prefix + u
         return idx
 
     @cached_property
     def _cached_index(self):
         return self.index()
 
-    def reverse(self, name):
+    def reverse(self, name, *args, **kwargs):
         if not name in self._cached_index:
             raise RouteReversalError()
-        return self._cached_index[name]
+        url = self._cached_index[name].reverse(*args)
+        if kwargs:
+            url += "?" + urlencode(kwargs)
+        return url
 
     def match(self, path_info, request):
         path_info, args = self.match_prefix(path_info)
@@ -285,17 +293,35 @@ class URLPattern(object):
 
     def __init__(self, pattern):
         self.pattern = pattern
-        (self._compiled,
-         self._names) = self.compile_pattern(pattern)
+        self._compiled = None
+        self._names = None
+
+
+    def reverse(self, *args):
+        r = self.pattern
+        for arg in args:
+            r = self._type_re.sub(str(arg), self.pattern, 1)
+        if self._type_re.search(r):
+            raise RouteReversalError()
+        return r
+
+    @property
+    def compiled(self):
+        if self._compiled is None:
+            self._compiled, self._names = self.compile_pattern(self.pattern)
+        return self._compiled
 
     def match(self, path_info):
-        m = self._compiled.match(path_info)
+        m = self.compiled.match(path_info)
         if not m:
             raise NoURLPatternMatched()
         groups = m.groupdict()
-        args = tuple(
-            c(groups[n]) if c else groups[n]
-            for (n, c) in self._names)
+        try:
+            args = tuple(
+                c(groups[n]) if c else groups[n]
+                for (n, c) in self._names)
+        except ValueError:
+            raise NoURLPatternMatched()
         return path_info[m.end():], args
 
     def compile_pattern(self, pattern):
@@ -314,6 +340,19 @@ class URLPattern(object):
             last = m.end()
         compiled += re.escape(pattern[last:])
         return re.compile(compiled), names
+
+    def __add__(self, o):
+        if o is None:
+            return self
+        return URLPattern(join(self.pattern, o.pattern))
+
+    def __radd__(self, o):
+        if o is None:
+            return self
+        return URLPattern(join(o.pattern, self.pattern))
+
+    def __repr__(self):
+        return "<routr.URLPattern %s>" % self.pattern
 
 def join(a, b):
     a = a or ""

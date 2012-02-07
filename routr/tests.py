@@ -54,6 +54,10 @@ class TestEndpoint(TestRouting):
         self.assertEqual(r.reverse("news"), "/news")
         self.assertRaises(RouteReversalError, r.reverse, "news2")
 
+        r = route("news/{int}/", "view", name="news")
+        self.assertEqual(r.reverse("news", 42), "/news/42/")
+        self.assertRaises(RouteReversalError, r.reverse, "news2")
+
     def test_match(self):
         def view():
             return "hello"
@@ -166,6 +170,11 @@ class TestRouteGroup(TestRouting):
         self.assertEqual(r.reverse("news"), "/api/news")
         self.assertEqual(r.reverse("comments"), "/api/comments")
         self.assertRaises(RouteReversalError, r.reverse, "a")
+
+        r = route("api",
+            route("news/{str}/", "news", name="news"),
+            route("comments", "comments", name="comments"))
+        self.assertEqual(r.reverse("news", "hello"), "/api/news/hello/")
 
     def test_simple(self):
         def news():
