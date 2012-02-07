@@ -1,0 +1,1 @@
+-e git://github.com/andreypopp/bw_sphinxtheme.git#egg=bw_sphinxtheme
