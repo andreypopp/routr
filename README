@@ -1,1 +1,6 @@
-Please see ``routr.tests`` for example usage.
+routr -- lightweight request routing for WebOb
+==============================================
+
+Docs[1] are hosted at excellent ReadTheDocs project.
+
+[1]: http://routr.readthedocs.org/
