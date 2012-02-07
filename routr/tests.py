@@ -1,4 +1,9 @@
-""" Tests for `routr`"""
+"""
+
+    routr.tests -- test suite
+    =========================
+
+"""
 
 from unittest import TestCase
 from webob import Request, exc

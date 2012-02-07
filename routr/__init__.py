@@ -5,7 +5,7 @@
 
 """
 
-from webob.exc import HTTPMethodNotAllowed, HTTPException
+from webob.exc import HTTPException
 
 from routr.schema import URLPattern
 from routr.utils import import_string, cached_property
