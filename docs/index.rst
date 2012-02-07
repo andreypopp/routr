@@ -3,20 +3,39 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to routr's documentation!
-=================================
+routr -- lightweight request routing for WebOb
+==============================================
 
-Contents:
+Routr was built to solve the problem of mapping WebOb request to Python code
+providing:
 
-.. toctree::
-   :maxdepth: 2
+* Declarative configuration -- all configuration done in declarative fashion, so
+  you can even generate documentation from your application's routes.
+
+* Non-intrusiveness -- you can map request to plain Python function thus
+  you're not required to write separate view layer for your application.
+
+Generating documentation from routes
+------------------------------------
+
+Let's suppose we have the following routes defined in our app:
+
+.. literalinclude:: ./examples.py
+
+Now we can use ``.. autoroutr:: examples:routes`` directive to generate
+documentation from these routes:
 
 .. autoroutr:: examples:routes
 
-Indices and tables
-==================
+Reporting bugs and working on routr
+-----------------------------------
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+Development takes place at `GitHub`_, you can clone source code repository with
+the following command::
 
+  % git clone git://github.com/andreypopp/routr.git
+
+In case submitting patch or GitHub pull request please ensure you have
+corresponding tests for your bugfix or new functionality.
+
+.. _Github: http://github.com/andreypopp/routr
