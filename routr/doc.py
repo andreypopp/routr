@@ -5,6 +5,27 @@
 
 """
 
+import sys
+
+try:
+    import docutils
+except ImportError:
+    print >> sys.stderr, "docutils should be installed for routr.doc"
+    raise
+
+try:
+    import sphinx
+except ImportError:
+    print >> sys.stderr, "sphinx should be installed for routr.doc"
+    raise
+
+try:
+    from sphinxcontrib import httpdomain
+except ImportError:
+    print >> sys.stderr, \
+        "sphinxcontrib-httpdomain should be installed for routr.doc"
+    raise
+
 from docutils import nodes
 from docutils.statemachine import ViewList
 
@@ -14,7 +35,6 @@ from sphinx.util.nodes import nested_parse_with_titles
 from sphinxcontrib import httpdomain
 
 from routr.utils import import_string
-from routr.schema import Method
 from routr import RouteGroup
 
 __all__ = ("AutoRoutrDirective",)
@@ -28,7 +48,7 @@ def traverse_routes(route, path="/"):
                 subroute,
                 path=join_path(path, subroute))]
     else:
-        return [route.method, path, route)]
+        return [(route.method, path, route)]
 
 def join_path(a, r):
     if not r.prefix:
