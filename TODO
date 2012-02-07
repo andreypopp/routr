@@ -1,12 +1,54 @@
+important
+---------
 
-  * provide tests for guards injecting kwargs for view
+  * add support for routr.schema.QueryParams
 
-  * optional docstrings for routes
+  * a way to pass request to view
 
-  * introspection for guards or just make them able to generate documentation
+    sometimes we want view to get request as an argument, we can still process
+    args and kwargs but somehow decorate request and pass it to view
 
   * improve test suite
 
-  * more efficient reversal needed
-
   * more explanatory error messages
+
+  * add docs!
+
+  * URLPattern placeholders to be optionally labeled
+
+    see as an example
+
+      /api/news/{id:int}/
+
+    that should only be rendered by .. autoroutr as
+
+      /api/news/{id}/
+
+    but should be functionally equivalent to
+
+      /api/news/{int}/
+
+less important
+--------------
+
+  * URLPattern to produce kwargs
+
+    what about
+
+      /api/news/{id:int}/
+
+    to return {'id': ...} as kwargs to view? Probably bad idea because url
+    should be considered as which contains only required params
+
+  * optional docstrings for routes
+
+    for now, we can pull docs from view's docstring, but it may be desirable to
+    put different docstring for specific route.
+
+  * introspection for guards or just make them able to generate documentation
+
+  * expand URL reversal for unnamed routes (by view)
+
+    sometimes it's just not possible, because we can define view as lambda or
+    something
+
