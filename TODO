@@ -1,6 +1,4 @@
 
-  * maybe we should restrict route patterns to typed placeholders, no regexes
-
   * provide tests for guards injecting kwargs for view
 
   * optional docstrings for routes
@@ -10,3 +8,5 @@
   * improve test suite
 
   * more efficient reversal needed
+
+  * more explanatory error messages
