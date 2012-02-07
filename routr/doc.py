@@ -19,16 +19,16 @@ from routr import RouteList
 
 __all__ = ("AutoRoutrDirective",)
 
-def traverse_routes(route, method="GET", path="/"):
+def traverse_routes(route, path="/"):
     """ Traverse routes by flatten them"""
     if isinstance(route, RouteList):
         return [(m, p, r)
             for subroute in route.routes
-            for (m, p, r) in traverse_routes(subroute,
-                    method=get_method(subroute) or method,
-                    path=join_path(path, subroute))]
+            for (m, p, r) in traverse_routes(
+                subroute,
+                path=join_path(path, subroute))]
     else:
-        return [(get_method(route) or method, path, route)]
+        return [route.method, path, route)]
 
 def join_path(a, r):
     if not r.prefix:
@@ -39,12 +39,6 @@ def join_path(a, r):
     if b.startswith("/"):
         b = b[1:]
     return a + "/" + b
-
-def get_method(route):
-    for g in route.guards:
-        if isinstance(g, Method) and g.allowed:
-            return g.allowed[0]
-    return None
 
 def http_directive(method, path, content):
     """ Construct line for http directive from httpdomain
