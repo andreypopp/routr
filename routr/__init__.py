@@ -5,9 +5,8 @@
 
 """
 
+import re
 from webob.exc import HTTPException
-
-from routr.schema import URLPattern
 from routr.utils import import_string, cached_property
 from routr.exc import (
     NoMatchFound, NoURLPatternMatched, RouteGuarded,
@@ -272,9 +271,51 @@ class ViewRef(object):
     def __call__(self, *args, **kwargs):
         return self.view(*args, **kwargs)
 
+class URLPattern(object):
+
+    _type_re = re.compile("{([a-z]+)}")
+
+    _typemap = {
+        "": ("[^/]+", None),
+        "str": ("[^/]+", None),
+        "string": ("[^/]+", None),
+        "path": (".*", None),
+        "int": ("[0-9]+", int),
+    }
+
+    def __init__(self, pattern):
+        self.pattern = pattern
+        (self._compiled,
+         self._names) = self.compile_pattern(pattern)
+
+    def match(self, path_info):
+        m = self._compiled.match(path_info)
+        if not m:
+            raise NoURLPatternMatched()
+        groups = m.groupdict()
+        args = tuple(
+            c(groups[n]) if c else groups[n]
+            for (n, c) in self._names)
+        return path_info[m.end():], args
+
+    def compile_pattern(self, pattern):
+        names = []
+        compiled = ""
+        last = 0
+        for n, m in enumerate(self._type_re.finditer(pattern)):
+            compiled += re.escape(pattern[last:m.start()])
+            typ = m.group(1)
+            if not typ in self._typemap:
+                raise InvalidRoutePattern(pattern)
+            r, c = self._typemap[typ]
+            name = "_gpt%d" % n
+            names.append((name, c))
+            compiled += "(?P<%s>%s)" % (name, r)
+            last = m.end()
+        compiled += re.escape(pattern[last:])
+        return re.compile(compiled), names
+
 def join(a, b):
     a = a or ""
     b = b or ""
-    a = a[:-1] if a.endswith("/") else a
-    b = b[1:] if b.startswith("/") else b
-    return a + "/" + b
+    return a.rstrip("/") + "/" + b.lstrip("/")

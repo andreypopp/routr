@@ -83,7 +83,7 @@ class TestEndpoint(TestRouting):
             MethodNotAllowed,
             r, Request.blank("/news", {"REQUEST_METHOD": "DELETE"}))
 
-    def test_param_pattern(self):
+    def test_param_pattern_int(self):
         def view(id):
             return id
         r = route("/news/{int}/", view)
@@ -95,6 +95,44 @@ class TestEndpoint(TestRouting):
         self.assertNoMatch(r, Request.blank("/news/a/"))
         self.assertNoMatch(r, Request.blank("/news//"))
         self.assertNoMatch(r, Request.blank("/news/122"))
+
+        def view(a, b, c):
+            return a, b, c
+
+        r = route("/news/{int}/{int}/{int}/", view)
+        req = Request.blank("/news/42/41/40/")
+        (args, kwargs), view = r(req)
+        self.assertEqual(view(*args, **kwargs), (42, 41, 40))
+
+    def test_param_pattern_string(self):
+        def view(id):
+            return id
+
+        r = route("/news/{string}/", view)
+
+        req = Request.blank("/news/42/")
+        (args, kwargs), view = r(req)
+        self.assertEqual(view(*args, **kwargs), "42")
+
+        req = Request.blank("/news/abcdef-12/")
+        (args, kwargs), view = r(req)
+        self.assertEqual(view(*args, **kwargs), "abcdef-12")
+
+    def test_param_pattern_path(self):
+        def view(id):
+            return id
+
+        r = route("/news/{path}", view)
+
+        req = Request.blank("/news/42/news")
+        (args, kwargs), view = r(req)
+        self.assertEqual(view(*args, **kwargs), "42/news")
+
+        r = route("/news/{path}/comments", view)
+
+        req = Request.blank("/news/42/news/comments")
+        (args, kwargs), view = r(req)
+        self.assertEqual(view(*args, **kwargs), "42/news")
 
     def test_param_guard(self):
         def view(id, q=None, page=1):

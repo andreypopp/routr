@@ -5,13 +5,12 @@
 
 """
 
-from re import compile as re_compile
 from webob import exc
 from colander import * # re-export
 
 from routr.exc import InvalidRoutePattern, NoURLPatternMatched
 
-__all__ = ("QueryParams", "Optional", "URLPattern")
+__all__ = ("QueryParams", "Optional")
 
 _none = object()
 
@@ -56,50 +55,3 @@ class QueryParams(object):
             if v is Optional.none:
                 kwargs.pop(k)
         return kwargs
-
-class URLPattern(object):
-
-    _type_re = re_compile("{([a-z]+)}")
-
-    typ_typ_map = {
-        "int": (Int(), "[0-9]+"),
-        "": (String(), "[a-zA-Z_-]"),
-        "str": (String(), "[a-zA-Z_-]"),
-        "string": (String(), "[a-zA-Z_-]"),
-    }
-
-    def __init__(self, pattern):
-        self.pattern = pattern
-        (self._compiled,
-         self._schema,
-         self._names) = self.compile_pattern(pattern)
-
-    def match(self, path_info):
-        m = self._compiled.match(path_info)
-        if not m:
-            raise NoURLPatternMatched()
-        groups = m.groupdict()
-        args = tuple(groups[n] for n in self._names)
-        try:
-            return path_info[m.end():], self._schema.deserialize(args)
-        except Invalid, e:
-            raise NoURLPatternMatched()
-
-    def compile_pattern(self, pattern):
-        names = []
-        compiled = ""
-        schema = SchemaNode(Tuple())
-        last = 0
-        for n, m in enumerate(self._type_re.finditer(pattern)):
-            compiled += pattern[last:m.start()]
-            typ = m.group(1)
-            if not typ in self.typ_typ_map:
-                raise InvalidRoutePattern(pattern)
-            t, r = self.typ_typ_map[typ]
-            schema.add(SchemaNode(t))
-            name = "_gpt%d" % n
-            names.append(name)
-            compiled += "(?P<%s>%s)" % (name, r)
-            last = m.end()
-        compiled += pattern[last:]
-        return re_compile(compiled), schema, names
