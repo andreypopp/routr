@@ -27,9 +27,9 @@ class Optional(object):
 class QueryParams(object):
     """ Guard for query string parameters
 
-    Raises :class:``webob.exc.HTTPBadRequest`` if query string isn't validated.
+    Raises :class:`webob.exc.HTTPBadRequest` if query string isn't validated.
 
-    :param **kwargs:
+    :param kwargs:
         mapping with validators for query string
     """
 

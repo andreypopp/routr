@@ -39,6 +39,14 @@ documentation from these routes:
 
   .. autoroutr:: examples:routes
 
+
+API reference
+-------------
+
+.. autofunction:: routr.route
+
+.. autoclass:: routr.schema.QueryParams
+
 Reporting bugs and working on routr
 -----------------------------------
 

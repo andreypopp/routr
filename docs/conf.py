@@ -252,4 +252,5 @@ texinfo_documents = [
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
     'stdlib': ('http://docs.python.org/', None),
+    'webob': ('http://docs.webob.org/en/latest/', None),
     }
