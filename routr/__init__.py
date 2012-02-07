@@ -14,7 +14,7 @@ from routr.exc import (
     MethodNotAllowed, RouteConfigurationError, InvalidRoutePattern)
 
 __all__ = (
-    "route", "Route", "Endpoint", "RootEndpoint", "RouteList",
+    "route", "Route", "Endpoint", "RootEndpoint", "RouteGroup",
     "GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "TRACE")
 
 GET = "GET"
@@ -69,14 +69,14 @@ def route(*directives):
         if method:
             raise RouteConfigurationError(
                 "'method' doesn't make sense for route groups")
-        return RouteList(routes, guards, prefix=prefix)
+        return RouteGroup(routes, guards, prefix=prefix)
 
     # route list
     elif all(isinstance(d, Route) for d in directives):
         if method:
             raise RouteConfigurationError(
                 "'method' doesn't make sense for route groups")
-        return RouteList(directives, guards)
+        return RouteGroup(directives, guards)
 
     # error here
     else:
@@ -163,14 +163,14 @@ class RootEndpoint(Endpoint):
             return "", ()
         raise NoURLPatternMatched()
 
-class RouteList(Route):
+class RouteGroup(Route):
     """ Route which represents a list of other routes
 
     Can have its own ``guards`` and URL ``prefix``.
     """
 
     def __init__(self, routes, guards, prefix=None):
-        super(RouteList, self).__init__(guards, prefix)
+        super(RouteGroup, self).__init__(guards, prefix)
         self.routes = routes
 
     def match(self, path_info, request):

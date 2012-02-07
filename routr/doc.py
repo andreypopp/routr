@@ -15,13 +15,13 @@ from sphinxcontrib import httpdomain
 
 from routr.utils import import_string
 from routr.schema import Method
-from routr import RouteList
+from routr import RouteGroup
 
 __all__ = ("AutoRoutrDirective",)
 
 def traverse_routes(route, path="/"):
     """ Traverse routes by flatten them"""
-    if isinstance(route, RouteList):
+    if isinstance(route, RouteGroup):
         return [(m, p, r)
             for subroute in route.routes
             for (m, p, r) in traverse_routes(

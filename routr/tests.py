@@ -4,7 +4,7 @@ from unittest import TestCase
 from webob import Request, exc
 
 from routr.schema import QueryParams, String, Int, Optional
-from routr import Route, Endpoint, RootEndpoint, RouteList
+from routr import Route, Endpoint, RootEndpoint, RouteGroup
 from routr import route, ViewRef, RouteConfigurationError
 from routr import POST, GET
 from routr.exc import NoURLPatternMatched, RouteGuarded, MethodNotAllowed
@@ -103,7 +103,7 @@ class TestEndpoint(TestRouting):
             exc.HTTPBadRequest,
             r, Request.blank("/news/42/?q=search&page=aa"))
 
-class TestRouteList(TestRouting):
+class TestRouteGroup(TestRouting):
 
     def test_simple(self):
         def news():
@@ -256,7 +256,7 @@ class TestRouteDirective(TestCase):
             route("comments", "myapp.api.comments"))
         self.assertEqual(r.guards, [])
         self.assertEqual(r.prefix, None)
-        self.assertIsInstance(r, RouteList)
+        self.assertIsInstance(r, RouteGroup)
 
     def test_route_list_no_prefix_guards(self):
         r = route(
@@ -265,7 +265,7 @@ class TestRouteDirective(TestCase):
             ["guard"])
         self.assertEqual(r.guards, ["guard"])
         self.assertEqual(r.prefix, None)
-        self.assertIsInstance(r, RouteList)
+        self.assertIsInstance(r, RouteGroup)
 
     def test_route_list(self):
         r = route("api",
@@ -273,7 +273,7 @@ class TestRouteDirective(TestCase):
             route("comments", "myapp.api.comments"))
         self.assertEqual(r.guards, [])
         self.assertNotEqual(r.prefix, None)
-        self.assertIsInstance(r, RouteList)
+        self.assertIsInstance(r, RouteGroup)
 
     def test_route_list_guards(self):
         r = route("api",
@@ -282,7 +282,7 @@ class TestRouteDirective(TestCase):
             ["guard"])
         self.assertNotEqual(r.prefix, None)
         self.assertEqual(r.guards, ["guard"])
-        self.assertIsInstance(r, RouteList)
+        self.assertIsInstance(r, RouteGroup)
 
     def test_invalid_routes(self):
         self.assertRaises(RouteConfigurationError, route)
