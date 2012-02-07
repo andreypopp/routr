@@ -15,6 +15,18 @@ providing:
 * Non-intrusiveness -- you can map request to plain Python function thus
   you're not required to write separate view layer for your application.
 
+Usage
+-----
+
+Matching query string
+---------------------
+
+Reversing routes
+----------------
+
+Writing arbitrary tests for routes -- guards
+--------------------------------------------
+
 Generating documentation from routes
 ------------------------------------
 
@@ -25,7 +37,7 @@ Let's suppose we have the following routes defined in our app:
 Now we can use ``.. autoroutr:: examples:routes`` directive to generate
 documentation from these routes:
 
-.. autoroutr:: examples:routes
+  .. autoroutr:: examples:routes
 
 Reporting bugs and working on routr
 -----------------------------------
