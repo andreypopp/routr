@@ -5,9 +5,6 @@
 
   * provide tests for guards injecting kwargs for view
 
-  * what about making Method guard special (like URLPattern) and make it
-    mandatory, GET by default
-
   * optional docstrings for routes
 
   * introspection for guards or just make them able to generate documentation

@@ -5,22 +5,43 @@
 
 """
 
-from webob import exc as webobexc
+from webob.exc import HTTPMethodNotAllowed, HTTPException
 
 from routr.schema import URLPattern
 from routr.utils import import_string, cached_property
-from routr.exc import NoMatchFound, NoURLPatternMatched, RouteGuarded
-from routr.exc import RouteConfigurationError, InvalidRoutePattern
+from routr.exc import (
+    NoMatchFound, NoURLPatternMatched, RouteGuarded,
+    MethodNotAllowed, RouteConfigurationError, InvalidRoutePattern)
 
-__all__ = ("route", "Route", "Endpoint", "RootEndpoint", "RouteList")
+__all__ = (
+    "route", "Route", "Endpoint", "RootEndpoint", "RouteList",
+    "GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "TRACE")
+
+GET = "GET"
+POST = "POST"
+PUT = "PUT"
+DELETE = "DELETE"
+HEAD = "HEAD"
+OPTIONS = "OPTIONS"
+TRACE = "TRACE"
+
+_http_methods = set([GET, POST, PUT, DELETE, HEAD, OPTIONS, TRACE])
 
 def route(*directives):
     """ Directive for configuring routes in application"""
     directives = list(directives)
     if not directives:
-        raise RouteConfigurationError("empty 'route' statement")
+        raise RouteConfigurationError()
 
     guards = directives.pop() if isinstance(directives[-1], list) else []
+
+    if not directives:
+        raise RouteConfigurationError()
+
+    method = directives.pop(0) if directives[0] in _http_methods else None
+
+    if not directives:
+        raise RouteConfigurationError()
 
     def is_view_ref(d):
         return (
@@ -31,24 +52,30 @@ def route(*directives):
     # root directive
     if len(directives) == 1 and is_view_ref(directives[0]):
         view = directives[0]
-        return RootEndpoint(ViewRef(view), guards)
+        return RootEndpoint(ViewRef(view), method or GET, guards)
 
     # endpoint directive
     elif (len(directives) == 2
             and isinstance(directives[0], str)
             and is_view_ref(directives[1])):
         prefix, view = directives
-        return Endpoint(ViewRef(view), guards, prefix=prefix)
+        return Endpoint(ViewRef(view), method or GET, guards, prefix=prefix)
 
     # route list with prefix
     elif (len(directives) > 1
             and isinstance(directives[0], str)
             and all(isinstance(d, Route) for d in directives[1:])):
         prefix, routes = directives[0], directives[1:]
+        if method:
+            raise RouteConfigurationError(
+                "'method' doesn't make sense for route groups")
         return RouteList(routes, guards, prefix=prefix)
 
     # route list
     elif all(isinstance(d, Route) for d in directives):
+        if method:
+            raise RouteConfigurationError(
+                "'method' doesn't make sense for route groups")
         return RouteList(directives, guards)
 
     # error here
@@ -107,14 +134,17 @@ class Route(object):
 class Endpoint(Route):
     """ Endpoint route"""
 
-    def __init__(self, view, guards, prefix=None):
+    def __init__(self, view, method, guards, prefix=None):
         super(Endpoint, self).__init__(guards, prefix)
         self.view = view
+        self.method = method
 
     def match(self, path_info, request):
         path_info, args = self.match_prefix(path_info)
         if path_info:
             raise NoURLPatternMatched()
+        if self.method != request.method:
+            raise MethodNotAllowed()
         kwargs = self.match_guards(request)
         return (args, kwargs), self.view
 
@@ -152,7 +182,10 @@ class RouteList(Route):
                 (r_args, r_kwargs), view = route.match(path_info, request)
             except NoURLPatternMatched:
                 continue
-            except webobexc.HTTPException, e:
+            except MethodNotAllowed, e:
+                guarded.append(e)
+                continue
+            except HTTPException, e:
                 guarded.append(e)
                 continue
             else:

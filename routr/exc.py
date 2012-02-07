@@ -8,7 +8,7 @@
 from webob import exc
 
 __all__ = (
-    "NoMatchFound", "NoURLPatternMatched", "RouteGuarded",
+    "NoMatchFound", "NoURLPatternMatched", "RouteGuarded", "MethodNotAllowed",
     "RouteConfigurationError", "InvalidRoutePattern")
 
 class NoMatchFound(Exception):
@@ -36,6 +36,9 @@ class RouteGuarded(NoMatchFound):
 
     def __init__(self, response):
         self.response = response
+
+class MethodNotAllowed(NoMatchFound):
+    """ Raised when request was matched but request method isn't allowed"""
 
 class RouteConfigurationError(Exception):
     """ Routes were configured improperly

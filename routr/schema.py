@@ -11,7 +11,7 @@ from colander import * # re-export
 
 from routr.exc import InvalidRoutePattern, NoURLPatternMatched
 
-__all__ = ("QueryParams", "Optional", "Method", "URLPattern")
+__all__ = ("QueryParams", "Optional", "URLPattern")
 
 _none = object()
 
@@ -56,25 +56,6 @@ class QueryParams(object):
             if v is Optional.none:
                 kwargs.pop(k)
         return kwargs
-
-class Method(object):
-    """ Guard for HTTP method
-
-    Raises :class:``webob.exc.HTTPMethodNotAllowed`` if method isn't validated.
-
-    :param *allowed:
-        allowed HTTP method
-    """
-
-    def __init__(self, *allowed):
-        self.allowed = allowed
-
-    def __call__(self, request):
-        if not request.method in self.allowed:
-            raise exc.HTTPMethodNotAllowed()
-
-    def __repr__(self):
-        return "%s(%s)" % (self.__class__.__name__, ", ".join(self.allowed))
 
 class URLPattern(object):
 

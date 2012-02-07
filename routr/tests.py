@@ -3,10 +3,11 @@
 from unittest import TestCase
 from webob import Request, exc
 
-from routr.schema import Method, QueryParams, String, Int, Optional
-from routr import NoURLPatternMatched, RouteGuarded
+from routr.schema import QueryParams, String, Int, Optional
 from routr import Route, Endpoint, RootEndpoint, RouteList
 from routr import route, ViewRef, RouteConfigurationError
+from routr import POST, GET
+from routr.exc import NoURLPatternMatched, RouteGuarded, MethodNotAllowed
 
 __all__ = ()
 
@@ -53,17 +54,17 @@ class TestEndpoint(TestRouting):
             route("news", "view"),
             "/newsweek")
 
-    def test_guard(self):
+    def test_method(self):
         def view():
             return "hello"
-        r = route("news", view, [Method("GET", "POST")])
+        r = route(POST, "news", view)
 
         req = Request.blank("/news", {"REQUEST_METHOD": "POST"})
         (args, kwargs), view = r(req)
         self.assertEqual(view(*args, **kwargs), "hello")
 
         self.assertRaises(
-            exc.HTTPMethodNotAllowed,
+            MethodNotAllowed,
             r, Request.blank("/news", {"REQUEST_METHOD": "DELETE"}))
 
     def test_param_pattern(self):
@@ -158,7 +159,7 @@ class TestRouteList(TestRouting):
         (args, kwargs), view = r(req)
         self.assertEqual(view(*args, **kwargs), "api_comments")
 
-    def test_guards_inner(self):
+    def test_method_inner(self):
         def news():
             return "news"
         def comments_get():
@@ -167,9 +168,9 @@ class TestRouteList(TestRouting):
             return "comments_post"
 
         r = route(
-            route("news", news, [Method("GET")]),
-            route("comments", comments_get, [Method("GET")]),
-            route("comments", comments_post, [Method("POST")]))
+            route("news", news),
+            route(GET, "comments", comments_get),
+            route(POST, "comments", comments_post))
 
         req = Request.blank("/news", {"REQUEST_METHOD": "GET"})
         (args, kwargs), view = r(req)
