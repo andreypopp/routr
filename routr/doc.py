@@ -26,6 +26,8 @@ except ImportError:
         "sphinxcontrib-httpdomain should be installed for routr.doc"
     raise
 
+from fnmatch import fnmatchcase
+
 from docutils import nodes
 from docutils.statemachine import ViewList
 
@@ -34,7 +36,7 @@ from sphinx.util.docstrings import prepare_docstring
 from sphinx.util.nodes import nested_parse_with_titles
 from sphinxcontrib import httpdomain
 
-from routr.utils import import_string
+from routr.utils import import_string, cached_property
 from routr import RouteGroup
 
 __all__ = ("AutoRoutrDirective",)
@@ -83,11 +85,36 @@ class AutoRoutrDirective(Directive):
 
     has_content = True
     requied_argument = 1
-    option_spec = {}
+    option_spec = {
+        "include": str,
+        "exclude": str,
+    }
+
+    @cached_property
+    def include_patterns(self):
+        if "include" in self.options:
+            return [x.strip() for x in self.options["include"].split(",")]
+        return []
+
+    @cached_property
+    def exclude_patterns(self):
+        if "exclude" in self.options:
+            return [x.strip() for x in self.options["exclude"].split(",")]
+        return []
+
+    def allowed(self, path):
+        return (
+            (not self.include_patterns
+            or any(fnmatchcase(path, x) for x in self.include_patterns))
+                and
+            (not self.exclude_patterns
+            or all(not fnmatchcase(path, x) for x in self.exclude_patterns)))
 
     def make_rst(self):
         routes = import_string(self.content.data[0])
         for method, path, route in traverse_routes(routes):
+            if not self.allowed(path):
+                continue
             docstring = prepare_docstring(route.view.__doc__ or "")
             for line in http_directive(method, path, docstring):
                 yield line
