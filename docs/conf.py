@@ -253,4 +253,6 @@ texinfo_documents = [
 intersphinx_mapping = {
     'stdlib': ('http://docs.python.org/', None),
     'webob': ('http://docs.webob.org/en/latest/', None),
+    'colander': ('http://docs.pylonsproject.org/projects/colander/en/latest/',
+        None),
     }

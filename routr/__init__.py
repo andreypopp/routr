@@ -92,9 +92,9 @@ class Route(object):
     """ Base class for routes
 
     :param guards:
-        a list of guards for route
+        a list of guards
     :param prefix:
-        URL prefix to match for route
+        pattern for URL prefix
     """
 
     def __init__(self, guards, prefix=None):
@@ -138,13 +138,47 @@ class Route(object):
         return self.match(path_info, request)
 
     def match(self, request):
+        """ Match ``request`` against route
+
+        Returns route target and collected ``*args`` and ``**kwargs``.
+
+        :rtype:
+            ``((tuple(), dict()), object)``
+
+        :raises routr.exc.NoURLPatternMatched:
+            if no route was matched by URL
+        :raises routr.exc.RouteGuarded:
+            if route was guarded by one or more guards
+        :raises routr.exc.MethodNotAllowed:
+            if method isn't allowed for matched route
+        """
         raise NotImplementedError()
 
     def reverse(self, name, *args, **kwargs):
+        """ Reverse route with ``name`` using ``*args`` as pattern parameters
+        and ``**kwargs`` as query string parameters
+
+        :raises routr.exc.RouteReversalError:
+            if no reversal can be computed for given arguments
+        """
         raise NotImplementedError()
 
 class Endpoint(Route):
-    """ Endpoint route"""
+    """ Endpoint route
+
+    Associated with some object ``view`` which will be returned in case of
+    successful match and a ``method`` which matches against request's method.
+
+    Additional to :class:`.Route` params are:
+
+    :param view:
+        object to associate with route
+    :param method:
+        HTTP method associate with route
+    :param name:
+        optional name, should be provided if reversal of this route is needed,
+        otherwise ``None`` is allowed
+    """
 
     def __init__(self, view, method, name, guards, prefix=None):
         super(Endpoint, self).__init__(guards, prefix)
@@ -177,7 +211,7 @@ class Endpoint(Route):
     __str__ = __repr__
 
 class RootEndpoint(Endpoint):
-    """ Root route endpoint"""
+    """ Endpoint route with no prefix"""
 
     def match_prefix(self, path_info):
         if not path_info or path_info == "/":
@@ -185,9 +219,14 @@ class RootEndpoint(Endpoint):
         raise NoURLPatternMatched()
 
 class RouteGroup(Route):
-    """ Route which represents a list of other routes
+    """ Route which represents a group of other routes
 
-    Can have its own ``guards`` and URL ``prefix``.
+    Can have its own ``guards`` and a URL ``prefix``.
+
+    Additional to :class:`.Route` params are:
+
+    :param routes:
+        a list of :class:`Route` objects
     """
 
     def __init__(self, routes, guards, prefix=None):
