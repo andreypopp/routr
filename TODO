@@ -3,11 +3,6 @@ important
 
   * add support for routr.schema.QueryParams
 
-  * a way to pass request to view
-
-    sometimes we want view to get request as an argument, we can still process
-    args and kwargs but somehow decorate request and pass it to view
-
   * improve test suite
 
   * more explanatory error messages
