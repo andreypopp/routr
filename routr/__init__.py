@@ -293,11 +293,50 @@ class URLPattern(object):
 
     def __init__(self, pattern):
         self.pattern = pattern
+
         self._compiled = None
         self._names = None
 
+    @cached_property
+    def is_exact(self):
+        return self._type_re.search(self.pattern) is None
+
+    @cached_property
+    def compiled(self):
+        if self._compiled is None:
+            self.compile()
+        return self._compiled
+
+    @cached_property
+    def _pattern_len(self):
+        return len(self.pattern)
+
+    def compile(self):
+        if self.is_exact:
+            return
+
+        names = []
+        compiled = ""
+        last = 0
+        for n, m in enumerate(self._type_re.finditer(self.pattern)):
+            compiled += re.escape(self.pattern[last:m.start()])
+            typ = m.group(1)
+            if not typ in self._typemap:
+                raise InvalidRoutePattern(self.pattern)
+            r, c = self._typemap[typ]
+            name = "_gpt%d" % n
+            names.append((name, c))
+            compiled += "(?P<%s>%s)" % (name, r)
+            last = m.end()
+        compiled += re.escape(self.pattern[last:])
+
+        self._compiled = re.compile(compiled)
+        self._names = names
 
     def reverse(self, *args):
+        if self.is_exact:
+            return self.pattern
+
         r = self.pattern
         for arg in args:
             r = self._type_re.sub(str(arg), self.pattern, 1)
@@ -305,26 +344,11 @@ class URLPattern(object):
             raise RouteReversalError()
         return r
 
-    @cached_property
-    def is_exact(self):
-        return self._type_re.search(self.pattern) is None
-
-    @cached_property
-    def _pattern_len(self):
-        return len(self.pattern)
-
-    @property
-    def compiled(self):
-        if self._compiled is None:
-            self._compiled, self._names = self.compile_pattern(self.pattern)
-        return self._compiled
-
     def match(self, path_info):
         if self.is_exact:
             if not path_info.startswith(self.pattern):
                 raise NoURLPatternMatched()
             return path_info[self._pattern_len:], ()
-
 
         m = self.compiled.match(path_info)
         if not m:
@@ -337,23 +361,6 @@ class URLPattern(object):
         except ValueError:
             raise NoURLPatternMatched()
         return path_info[m.end():], args
-
-    def compile_pattern(self, pattern):
-        names = []
-        compiled = ""
-        last = 0
-        for n, m in enumerate(self._type_re.finditer(pattern)):
-            compiled += re.escape(pattern[last:m.start()])
-            typ = m.group(1)
-            if not typ in self._typemap:
-                raise InvalidRoutePattern(pattern)
-            r, c = self._typemap[typ]
-            name = "_gpt%d" % n
-            names.append((name, c))
-            compiled += "(?P<%s>%s)" % (name, r)
-            last = m.end()
-        compiled += re.escape(pattern[last:])
-        return re.compile(compiled), names
 
     def __add__(self, o):
         if o is None:
