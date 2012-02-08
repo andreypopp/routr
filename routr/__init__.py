@@ -305,6 +305,14 @@ class URLPattern(object):
             raise RouteReversalError()
         return r
 
+    @cached_property
+    def is_exact(self):
+        return self._type_re.search(self.pattern) is None
+
+    @cached_property
+    def _pattern_len(self):
+        return len(self.pattern)
+
     @property
     def compiled(self):
         if self._compiled is None:
@@ -312,6 +320,12 @@ class URLPattern(object):
         return self._compiled
 
     def match(self, path_info):
+        if self.is_exact:
+            if not path_info.startswith(self.pattern):
+                raise NoURLPatternMatched()
+            return path_info[self._pattern_len:], ()
+
+
         m = self.compiled.match(path_info)
         if not m:
             raise NoURLPatternMatched()
