@@ -143,7 +143,7 @@ class TestEndpoint(TestRouting):
             return id, q, page
         r = route(
             "/news/{int}/", target,
-            guards=[QueryParams(q=Optional(String), page=Optional(Int))])
+            guards=QueryParams(q=Optional(String), page=Optional(Int)))
 
         req = Request.blank("/news/42/")
         (args, kwargs), target = r(req)

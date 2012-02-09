@@ -75,6 +75,9 @@ def route(*directives, **kwargs):
     name = kwargs.pop("name", None)
     guards = kwargs.pop("guards", [])
 
+    if not isinstance(guards, (list, tuple)):
+        guards = [guards]
+
     # root directive
     if len(directives) == 1 and not isinstance(directives[0], Route):
         target = directives[0]
