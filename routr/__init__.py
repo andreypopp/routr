@@ -17,7 +17,7 @@ from routr.exc import (
     RouteReversalError)
 
 __all__ = (
-    "route", "include",
+    "route", "include", "plug"
     "Route", "Endpoint", "RootEndpoint", "RouteGroup",
     "GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "TRACE")
 
