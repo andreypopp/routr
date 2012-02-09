@@ -115,7 +115,7 @@ class AutoRoutrDirective(Directive):
         for method, path, route in traverse_routes(routes):
             if not self.allowed(path):
                 continue
-            docstring = prepare_docstring(route.view.__doc__ or "")
+            docstring = prepare_docstring(route.target.__doc__ or "")
             for line in http_directive(method, path, docstring):
                 yield line
 

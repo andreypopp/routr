@@ -10,7 +10,7 @@ from webob import Request, exc
 
 from routr.schema import QueryParams, String, Int, Optional
 from routr import Route, Endpoint, RootEndpoint, RouteGroup
-from routr import route, ViewRef, RouteConfigurationError
+from routr import route, RouteConfigurationError
 from routr import POST, GET
 from routr.exc import (
     NoURLPatternMatched, RouteGuarded, MethodNotAllowed, RouteReversalError)
@@ -28,134 +28,134 @@ class TestRouting(TestCase):
 class TestRootEnpoint(TestRouting):
 
     def test_reverse(self):
-        r = route("view", name="news")
+        r = route("target", name="news")
         self.assertEqual(r.reverse("news"), "/")
         self.assertRaises(RouteReversalError, r.reverse, "news2")
 
     def test_match(self):
-        def view():
+        def target():
             return "hello"
-        r = route(view)
+        r = route(target)
         req = Request.blank("/")
-        (args, kwargs), view = r(req)
-        self.assertEqual(view(*args, **kwargs), "hello")
+        (args, kwargs), target = r(req)
+        self.assertEqual(target(*args, **kwargs), "hello")
 
     def test_no_match(self):
-        def view():
+        def target():
             return "hello"
-        r = route(view)
+        r = route(target)
         req = Request.blank("/news")
         self.assertRaises(NoURLPatternMatched, r, req)
 
 class TestEndpoint(TestRouting):
 
     def test_reverse(self):
-        r = route("news", "view", name="news")
+        r = route("news", "target", name="news")
         self.assertEqual(r.reverse("news"), "/news")
         self.assertRaises(RouteReversalError, r.reverse, "news2")
 
-        r = route("news/{int}/", "view", name="news")
+        r = route("news/{int}/", "target", name="news")
         self.assertEqual(r.reverse("news", 42), "/news/42/")
         self.assertRaises(RouteReversalError, r.reverse, "news2")
 
     def test_match(self):
-        def view():
+        def target():
             return "hello"
-        r = route("news", view)
+        r = route("news", target)
         req = Request.blank("/news")
-        (args, kwargs), view = r(req)
-        self.assertEqual(view(*args, **kwargs), "hello")
+        (args, kwargs), target = r(req)
+        self.assertEqual(target(*args, **kwargs), "hello")
 
     def test_no_match(self):
         self.assertNoMatch(
-            route("news", "view"),
+            route("news", "target"),
             "/new")
         self.assertNoMatch(
-            route("news", "view"),
+            route("news", "target"),
             "/newsweek")
 
     def test_method(self):
-        def view():
+        def target():
             return "hello"
-        r = route(POST, "news", view)
+        r = route(POST, "news", target)
 
         req = Request.blank("/news", {"REQUEST_METHOD": "POST"})
-        (args, kwargs), view = r(req)
-        self.assertEqual(view(*args, **kwargs), "hello")
+        (args, kwargs), target = r(req)
+        self.assertEqual(target(*args, **kwargs), "hello")
 
         self.assertRaises(
             MethodNotAllowed,
             r, Request.blank("/news", {"REQUEST_METHOD": "DELETE"}))
 
     def test_param_pattern_int(self):
-        def view(id):
+        def target(id):
             return id
-        r = route("/news/{int}/", view)
+        r = route("/news/{int}/", target)
         req = Request.blank("/news/42/")
-        (args, kwargs), view = r(req)
-        self.assertEqual(view(*args, **kwargs), 42)
+        (args, kwargs), target = r(req)
+        self.assertEqual(target(*args, **kwargs), 42)
 
         self.assertNoMatch(r, Request.blank("/news/"))
         self.assertNoMatch(r, Request.blank("/news/a/"))
         self.assertNoMatch(r, Request.blank("/news//"))
         self.assertNoMatch(r, Request.blank("/news/122"))
 
-        def view(a, b, c):
+        def target(a, b, c):
             return a, b, c
 
-        r = route("/news/{int}/{int}/{int}/", view)
+        r = route("/news/{int}/{int}/{int}/", target)
         req = Request.blank("/news/42/41/40/")
-        (args, kwargs), view = r(req)
-        self.assertEqual(view(*args, **kwargs), (42, 41, 40))
+        (args, kwargs), target = r(req)
+        self.assertEqual(target(*args, **kwargs), (42, 41, 40))
 
     def test_param_pattern_string(self):
-        def view(id):
+        def target(id):
             return id
 
-        r = route("/news/{string}/", view)
+        r = route("/news/{string}/", target)
 
         req = Request.blank("/news/42/")
-        (args, kwargs), view = r(req)
-        self.assertEqual(view(*args, **kwargs), "42")
+        (args, kwargs), target = r(req)
+        self.assertEqual(target(*args, **kwargs), "42")
 
         req = Request.blank("/news/abcdef-12/")
-        (args, kwargs), view = r(req)
-        self.assertEqual(view(*args, **kwargs), "abcdef-12")
+        (args, kwargs), target = r(req)
+        self.assertEqual(target(*args, **kwargs), "abcdef-12")
 
     def test_param_pattern_path(self):
-        def view(id):
+        def target(id):
             return id
 
-        r = route("/news/{path}", view)
+        r = route("/news/{path}", target)
 
         req = Request.blank("/news/42/news")
-        (args, kwargs), view = r(req)
-        self.assertEqual(view(*args, **kwargs), "42/news")
+        (args, kwargs), target = r(req)
+        self.assertEqual(target(*args, **kwargs), "42/news")
 
-        r = route("/news/{path}/comments", view)
+        r = route("/news/{path}/comments", target)
 
         req = Request.blank("/news/42/news/comments")
-        (args, kwargs), view = r(req)
-        self.assertEqual(view(*args, **kwargs), "42/news")
+        (args, kwargs), target = r(req)
+        self.assertEqual(target(*args, **kwargs), "42/news")
 
     def test_param_guard(self):
-        def view(id, q=None, page=1):
+        def target(id, q=None, page=1):
             return id, q, page
         r = route(
-            "/news/{int}/", view,
-            [QueryParams(q=Optional(String), page=Optional(Int))])
+            "/news/{int}/", target,
+            guards=[QueryParams(q=Optional(String), page=Optional(Int))])
 
         req = Request.blank("/news/42/")
-        (args, kwargs), view = r(req)
-        self.assertEqual(view(*args, **kwargs), (42, None, 1))
+        (args, kwargs), target = r(req)
+        self.assertEqual(target(*args, **kwargs), (42, None, 1))
 
         req = Request.blank("/news/42/?q=search")
-        (args, kwargs), view = r(req)
-        self.assertEqual(view(*args, **kwargs), (42, "search", 1))
+        (args, kwargs), target = r(req)
+        self.assertEqual(target(*args, **kwargs), (42, "search", 1))
 
         req = Request.blank("/news/42/?q=search&page=100")
-        (args, kwargs), view = r(req)
-        self.assertEqual(view(*args, **kwargs), (42, "search", 100))
+        (args, kwargs), target = r(req)
+        self.assertEqual(target(*args, **kwargs), (42, "search", 100))
 
         self.assertRaises(
             exc.HTTPBadRequest,
@@ -183,8 +183,7 @@ class TestRouteGroup(TestRouting):
         self.assertEqual(r.reverse("create-news"), "/api")
 
     def test_reverse_empty_prefix(self):
-        r = route(
-            route("news", name="news"))
+        r = route(route("news", name="news"))
         self.assertEqual(r.reverse("news"), "/")
 
     def test_simple(self):
@@ -198,12 +197,12 @@ class TestRouteGroup(TestRouting):
             route("comments", comments))
 
         req = Request.blank("/news")
-        (args, kwargs), view = r(req)
-        self.assertEqual(view(*args, **kwargs), "news")
+        (args, kwargs), target = r(req)
+        self.assertEqual(target(*args, **kwargs), "news")
 
         req = Request.blank("/comments")
-        (args, kwargs), view = r(req)
-        self.assertEqual(view(*args, **kwargs), "comments")
+        (args, kwargs), target = r(req)
+        self.assertEqual(target(*args, **kwargs), "comments")
 
         self.assertNoMatch(r, "/newsweeek")
         self.assertNoMatch(r, "/ne")
@@ -226,20 +225,20 @@ class TestRouteGroup(TestRouting):
             route("comments", comments))
 
         req = Request.blank("/news")
-        (args, kwargs), view = r(req)
-        self.assertEqual(view(*args, **kwargs), "news")
+        (args, kwargs), target = r(req)
+        self.assertEqual(target(*args, **kwargs), "news")
 
         req = Request.blank("/comments")
-        (args, kwargs), view = r(req)
-        self.assertEqual(view(*args, **kwargs), "comments")
+        (args, kwargs), target = r(req)
+        self.assertEqual(target(*args, **kwargs), "comments")
 
         req = Request.blank("/api/news")
-        (args, kwargs), view = r(req)
-        self.assertEqual(view(*args, **kwargs), "api_news")
+        (args, kwargs), target = r(req)
+        self.assertEqual(target(*args, **kwargs), "api_news")
 
         req = Request.blank("/api/comments")
-        (args, kwargs), view = r(req)
-        self.assertEqual(view(*args, **kwargs), "api_comments")
+        (args, kwargs), target = r(req)
+        self.assertEqual(target(*args, **kwargs), "api_comments")
 
     def test_by_method(self):
         r = route("api",
@@ -247,12 +246,12 @@ class TestRouteGroup(TestRouting):
             route(POST, "news_post"))
 
         req = Request.blank("/api", {"REQUEST_METHOD": "POST"})
-        (args, kwargs), view = r(req)
-        self.assertEqual(view, "news_post")
+        (args, kwargs), target = r(req)
+        self.assertEqual(target, "news_post")
 
         req = Request.blank("/api")
-        (args, kwargs), view = r(req)
-        self.assertEqual(view, "news_get")
+        (args, kwargs), target = r(req)
+        self.assertEqual(target, "news_get")
 
     def test_method_inner(self):
         def news():
@@ -268,8 +267,8 @@ class TestRouteGroup(TestRouting):
             route(POST, "comments", comments_post))
 
         req = Request.blank("/news", {"REQUEST_METHOD": "GET"})
-        (args, kwargs), view = r(req)
-        self.assertEqual(view(*args, **kwargs), "news")
+        (args, kwargs), target = r(req)
+        self.assertEqual(target(*args, **kwargs), "news")
 
         req = Request.blank("/news", {"REQUEST_METHOD": "POST"})
         self.assertRaises(
@@ -277,8 +276,8 @@ class TestRouteGroup(TestRouting):
             r, req)
 
         req = Request.blank("/comments", {"REQUEST_METHOD": "POST"})
-        (args, kwargs), view = r(req)
-        self.assertEqual(view(*args, **kwargs), "comments_post")
+        (args, kwargs), target = r(req)
+        self.assertEqual(target(*args, **kwargs), "comments_post")
 
         req = Request.blank("/comments", {"REQUEST_METHOD": "DELETE"})
         self.assertRaises(
@@ -294,50 +293,50 @@ class TestRouteGroup(TestRouting):
 class TestRouteDirective(TestCase):
 
     def test_root_endpoint(self):
-        r = route("myapp.myview")
+        r = route("myapp.mytarget")
         self.assertEqual(r.prefix, None)
         self.assertEqual(r.guards, [])
         self.assertIsInstance(r, RootEndpoint)
-        self.assertEqual(r.view, "myapp.myview")
+        self.assertEqual(r.target, "myapp.mytarget")
 
     def test_root_endpoint_func(self):
-        def view():
+        def target():
             pass
-        r = route(view)
+        r = route(target)
         self.assertEqual(r.prefix, None)
         self.assertEqual(r.guards, [])
         self.assertIsInstance(r, RootEndpoint)
-        self.assertEqual(r.view, view)
+        self.assertEqual(r.target, target)
 
     def test_root_endpoint_guards(self):
-        r = route("myapp.myview", ["guard"])
+        r = route("myapp.mytarget", guards=["guard"])
         self.assertEqual(r.prefix, None)
         self.assertEqual(r.guards, ["guard"])
         self.assertIsInstance(r, Endpoint)
-        self.assertEqual(r.view, "myapp.myview")
+        self.assertEqual(r.target, "myapp.mytarget")
 
     def test_endpoint(self):
-        r = route("news", "myapp.myview")
+        r = route("news", "myapp.mytarget")
         self.assertNotEqual(r.prefix, None)
         self.assertEqual(r.guards, [])
         self.assertIsInstance(r, Endpoint)
-        self.assertEqual(r.view, "myapp.myview")
+        self.assertEqual(r.target, "myapp.mytarget")
 
     def test_endpoint_func(self):
-        def view():
+        def target():
             pass
-        r = route("news", view)
+        r = route("news", target)
         self.assertNotEqual(r.prefix, None)
         self.assertEqual(r.guards, [])
         self.assertIsInstance(r, Endpoint)
-        self.assertEqual(r.view, view)
+        self.assertEqual(r.target, target)
 
     def test_endpoint_guards(self):
-        r = route("news", "myapp.myview", ["guard"])
+        r = route("news", "myapp.mytarget", guards=["guard"])
         self.assertNotEqual(r.prefix, None)
         self.assertEqual(r.guards, ["guard"])
         self.assertIsInstance(r, Endpoint)
-        self.assertEqual(r.view, "myapp.myview")
+        self.assertEqual(r.target, "myapp.mytarget")
 
     def test_route_list_no_prefix(self):
         r = route(
@@ -351,7 +350,7 @@ class TestRouteDirective(TestCase):
         r = route(
             route("news", "myapp.api.news"),
             route("comments", "myapp.api.comments"),
-            ["guard"])
+            guards=["guard"])
         self.assertEqual(r.guards, ["guard"])
         self.assertEqual(r.prefix, None)
         self.assertIsInstance(r, RouteGroup)
@@ -368,7 +367,7 @@ class TestRouteDirective(TestCase):
         r = route("api",
             route("news", "myapp.api.news"),
             route("comments", "myapp.api.comments"),
-            ["guard"])
+            guards=["guard"])
         self.assertNotEqual(r.prefix, None)
         self.assertEqual(r.guards, ["guard"])
         self.assertIsInstance(r, RouteGroup)

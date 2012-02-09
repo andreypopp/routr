@@ -64,8 +64,6 @@ def route(*directives, **kwargs):
     if not directives:
         raise RouteConfigurationError()
 
-    guards = directives.pop() if isinstance(directives[-1], list) else []
-
     if not directives:
         raise RouteConfigurationError()
 
@@ -74,31 +72,21 @@ def route(*directives, **kwargs):
     if not directives:
         raise RouteConfigurationError()
 
-    def is_view_ref(d):
-        return (
-            isinstance(d, str)
-            or hasattr(d, "__call__")
-                and not isinstance(d, Route))
-
-    def view_ref(d):
-        if isinstance(d, str):
-            return ViewRef(d)
-        return d
-
     name = kwargs.pop("name", None)
+    guards = kwargs.pop("guards", [])
 
     # root directive
-    if len(directives) == 1 and is_view_ref(directives[0]):
-        view = directives[0]
-        return RootEndpoint(view_ref(view), method or GET, name, guards)
+    if len(directives) == 1 and not isinstance(directives[0], Route):
+        target = directives[0]
+        return RootEndpoint(target, method or GET, name, guards)
 
     # endpoint directive
     elif (len(directives) == 2
             and isinstance(directives[0], str)
-            and is_view_ref(directives[1])):
-        prefix, view = directives
+            and not isinstance(directives[1], Route)):
+        prefix, target = directives
         return Endpoint(
-            view_ref(view), method or GET, name, guards, prefix=prefix)
+            target, method or GET, name, guards, prefix=prefix)
 
     # route list with prefix
     elif (len(directives) > 1
@@ -203,12 +191,12 @@ class Route(object):
 class Endpoint(Route):
     """ Endpoint route
 
-    Associated with some object ``view`` which will be returned in case of
+    Associated with some object ``target`` which will be returned in case of
     successful match and a ``method`` which matches against request's method.
 
     Additional to :class:`.Route` params are:
 
-    :param view:
+    :param target:
         object to associate with route
     :param method:
         HTTP method associate with route
@@ -217,9 +205,9 @@ class Endpoint(Route):
         otherwise ``None`` is allowed
     """
 
-    def __init__(self, view, method, name, guards, prefix=None):
+    def __init__(self, target, method, name, guards, prefix=None):
         super(Endpoint, self).__init__(guards, prefix)
-        self.view = view
+        self.target = target
         self.method = method
         self.name = name
 
@@ -230,7 +218,7 @@ class Endpoint(Route):
         if self.method != request.method:
             raise MethodNotAllowed()
         kwargs = self.match_guards(request)
-        return (args, kwargs), self.view
+        return (args, kwargs), self.target
 
     def reverse(self, name, *args, **kwargs):
         if name != self.name:
@@ -244,8 +232,8 @@ class Endpoint(Route):
         return iter([self])
 
     def __repr__(self):
-        return "%s(view=%r, guards=%r, prefix=%r)" % (
-            self.__class__.__name__, self.view, self.guards,
+        return "%s(target=%r, guards=%r, prefix=%r)" % (
+            self.__class__.__name__, self.target, self.guards,
             self.prefix.pattern if self.prefix else None)
 
     __str__ = __repr__
@@ -312,7 +300,7 @@ class RouteGroup(Route):
         kwargs = self.match_guards(request)
         for route in self.routes:
             try:
-                (r_args, r_kwargs), view = route.match(path_info, request)
+                (r_args, r_kwargs), target = route.match(path_info, request)
             except NoURLPatternMatched:
                 continue
             except MethodNotAllowed, e:
@@ -324,7 +312,7 @@ class RouteGroup(Route):
             else:
                 kwargs.update(r_kwargs)
                 args = args + r_args
-                return (args, kwargs), view
+                return (args, kwargs), target
         if guarded:
             # NOTE
             #   we raise now only first guard falure
@@ -340,24 +328,6 @@ class RouteGroup(Route):
             self.__class__.__name__, self.routes, self.guards, self.prefix)
 
     __str__ = __repr__
-
-class ViewRef(str):
-    """ View reference
-
-    :param view_ref:
-        import spec or callable to reference to
-    """
-
-    @cached_property
-    def view(self):
-        return import_string(self.view_ref)
-
-    @property
-    def __doc__(self):
-        return self.view.__doc__
-
-    def __call__(self, *args, **kwargs):
-        return self.view(*args, **kwargs)
 
 class URLPattern(object):
 
