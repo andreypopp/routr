@@ -176,6 +176,11 @@ class TestRouteGroup(TestRouting):
             route("comments", "comments", name="comments"))
         self.assertEqual(r.reverse("news", "hello"), "/api/news/hello/")
 
+    def test_reverse_empty_prefix(self):
+        r = route(
+            route("news", name="news"))
+        self.assertEqual(r.reverse("news"), "/")
+
     def test_simple(self):
         def news():
             return "news"

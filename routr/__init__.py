@@ -192,6 +192,9 @@ class Route(object):
         """
         raise NotImplementedError()
 
+    def __iter__(self):
+        raise NotImplementedError()
+
 class Endpoint(Route):
     """ Endpoint route
 
@@ -232,6 +235,9 @@ class Endpoint(Route):
             url += "?" + urlencode(kwargs)
         return url
 
+    def __iter__(self):
+        return iter([self])
+
     def __repr__(self):
         return "%s(view=%r, guards=%r, prefix=%r)" % (
             self.__class__.__name__, self.view, self.guards,
@@ -270,7 +276,10 @@ class RouteGroup(Route):
                 if r.name in idx:
                     raise RouteConfigurationError(
                         "route this name '%s' already defined")
-                idx[r.name] = self.prefix + r.prefix
+                if self.prefix or r.prefix:
+                    idx[r.name] = self.prefix + r.prefix
+                else:
+                    idx[r.name] = URLPattern("/")
             elif isinstance(r, RouteGroup):
                 ridx = r.index()
                 if set(ridx) & set(idx):
@@ -317,6 +326,9 @@ class RouteGroup(Route):
             #   this is the place we might want more
             raise RouteGuarded(guarded[0])
         raise NoURLPatternMatched()
+
+    def __iter__(self):
+        return iter(self.routes)
 
     def __repr__(self):
         return "%s(routes=%r, guards=%r, prefix=%r)" % (
