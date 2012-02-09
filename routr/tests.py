@@ -182,7 +182,7 @@ class TestRouteGroup(TestRouting):
         self.assertEqual(r.reverse("get-news"), "/api")
         self.assertEqual(r.reverse("create-news"), "/api")
 
-    def test_reverse_empty_prefix(self):
+    def test_reverse_empty_pattern(self):
         r = route(route("news", name="news"))
         self.assertEqual(r.reverse("news"), "/")
 
@@ -294,7 +294,7 @@ class TestRouteDirective(TestCase):
 
     def test_root_endpoint(self):
         r = route("myapp.mytarget")
-        self.assertEqual(r.prefix, None)
+        self.assertEqual(r.pattern, None)
         self.assertEqual(r.guards, [])
         self.assertIsInstance(r, RootEndpoint)
         self.assertEqual(r.target, "myapp.mytarget")
@@ -303,21 +303,21 @@ class TestRouteDirective(TestCase):
         def target():
             pass
         r = route(target)
-        self.assertEqual(r.prefix, None)
+        self.assertEqual(r.pattern, None)
         self.assertEqual(r.guards, [])
         self.assertIsInstance(r, RootEndpoint)
         self.assertEqual(r.target, target)
 
     def test_root_endpoint_guards(self):
         r = route("myapp.mytarget", guards=["guard"])
-        self.assertEqual(r.prefix, None)
+        self.assertEqual(r.pattern, None)
         self.assertEqual(r.guards, ["guard"])
         self.assertIsInstance(r, Endpoint)
         self.assertEqual(r.target, "myapp.mytarget")
 
     def test_endpoint(self):
         r = route("news", "myapp.mytarget")
-        self.assertNotEqual(r.prefix, None)
+        self.assertNotEqual(r.pattern, None)
         self.assertEqual(r.guards, [])
         self.assertIsInstance(r, Endpoint)
         self.assertEqual(r.target, "myapp.mytarget")
@@ -326,33 +326,33 @@ class TestRouteDirective(TestCase):
         def target():
             pass
         r = route("news", target)
-        self.assertNotEqual(r.prefix, None)
+        self.assertNotEqual(r.pattern, None)
         self.assertEqual(r.guards, [])
         self.assertIsInstance(r, Endpoint)
         self.assertEqual(r.target, target)
 
     def test_endpoint_guards(self):
         r = route("news", "myapp.mytarget", guards=["guard"])
-        self.assertNotEqual(r.prefix, None)
+        self.assertNotEqual(r.pattern, None)
         self.assertEqual(r.guards, ["guard"])
         self.assertIsInstance(r, Endpoint)
         self.assertEqual(r.target, "myapp.mytarget")
 
-    def test_route_list_no_prefix(self):
+    def test_route_list_no_pattern(self):
         r = route(
             route("news", "myapp.api.news"),
             route("comments", "myapp.api.comments"))
         self.assertEqual(r.guards, [])
-        self.assertEqual(r.prefix, None)
+        self.assertEqual(r.pattern, None)
         self.assertIsInstance(r, RouteGroup)
 
-    def test_route_list_no_prefix_guards(self):
+    def test_route_list_no_pattern_guards(self):
         r = route(
             route("news", "myapp.api.news"),
             route("comments", "myapp.api.comments"),
             guards=["guard"])
         self.assertEqual(r.guards, ["guard"])
-        self.assertEqual(r.prefix, None)
+        self.assertEqual(r.pattern, None)
         self.assertIsInstance(r, RouteGroup)
 
     def test_route_list(self):
@@ -360,7 +360,7 @@ class TestRouteDirective(TestCase):
             route("news", "myapp.api.news"),
             route("comments", "myapp.api.comments"))
         self.assertEqual(r.guards, [])
-        self.assertNotEqual(r.prefix, None)
+        self.assertNotEqual(r.pattern, None)
         self.assertIsInstance(r, RouteGroup)
 
     def test_route_list_guards(self):
@@ -368,7 +368,7 @@ class TestRouteDirective(TestCase):
             route("news", "myapp.api.news"),
             route("comments", "myapp.api.comments"),
             guards=["guard"])
-        self.assertNotEqual(r.prefix, None)
+        self.assertNotEqual(r.pattern, None)
         self.assertEqual(r.guards, ["guard"])
         self.assertIsInstance(r, RouteGroup)
 

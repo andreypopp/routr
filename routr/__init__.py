@@ -84,19 +84,19 @@ def route(*directives, **kwargs):
     elif (len(directives) == 2
             and isinstance(directives[0], str)
             and not isinstance(directives[1], Route)):
-        prefix, target = directives
+        pattern, target = directives
         return Endpoint(
-            target, method or GET, name, guards, prefix=prefix)
+            target, method or GET, name, guards, pattern=pattern)
 
-    # route list with prefix
+    # route list with pattern
     elif (len(directives) > 1
             and isinstance(directives[0], str)
             and all(isinstance(d, Route) for d in directives[1:])):
-        prefix, routes = directives[0], directives[1:]
+        pattern, routes = directives[0], directives[1:]
         if method:
             raise RouteConfigurationError(
                 "'method' doesn't make sense for route groups")
-        return RouteGroup(routes, guards, prefix=prefix)
+        return RouteGroup(routes, guards, pattern=pattern)
 
     # route list
     elif all(isinstance(d, Route) for d in directives):
@@ -115,29 +115,25 @@ class Route(object):
 
     :param guards:
         a list of guards
-    :param prefix:
-        pattern for URL prefix
+    :param pattern:
+        pattern for URL pattern
     """
 
-    def __init__(self, guards, prefix=None):
+    def __init__(self, guards, pattern=None):
         self.guards = guards
-        self.prefix = self.compile_prefix(prefix)
+        self.pattern = self.compile_pattern(pattern)
 
-    @property
-    def pattern(self):
-        return self.prefix.pattern if self.prefix else None
-
-    def compile_prefix(self, prefix):
-        if not prefix:
+    def compile_pattern(self, pattern):
+        if not pattern:
             return None
-        if not prefix.startswith("/"):
-            prefix = "/" + prefix
-        return URLPattern(prefix)
+        if not pattern.startswith("/"):
+            pattern = "/" + pattern
+        return URLPattern(pattern)
 
-    def match_prefix(self, path_info):
-        if self.prefix is None:
+    def match_pattern(self, path_info):
+        if self.pattern is None:
             return path_info, ()
-        return self.prefix.match(path_info)
+        return self.pattern.match(path_info)
 
     def match_guards(self, request):
         kwargs = {}
@@ -205,14 +201,14 @@ class Endpoint(Route):
         otherwise ``None`` is allowed
     """
 
-    def __init__(self, target, method, name, guards, prefix=None):
-        super(Endpoint, self).__init__(guards, prefix)
+    def __init__(self, target, method, name, guards, pattern=None):
+        super(Endpoint, self).__init__(guards, pattern)
         self.target = target
         self.method = method
         self.name = name
 
     def match(self, path_info, request):
-        path_info, args = self.match_prefix(path_info)
+        path_info, args = self.match_pattern(path_info)
         if path_info:
             raise NoURLPatternMatched()
         if self.method != request.method:
@@ -223,7 +219,7 @@ class Endpoint(Route):
     def reverse(self, name, *args, **kwargs):
         if name != self.name:
             raise RouteReversalError("no route with name '%s'" % name)
-        url = self.prefix.reverse(*args) if self.prefix else "/"
+        url = self.pattern.reverse(*args) if self.pattern else "/"
         if kwargs:
             url += "?" + urlencode(kwargs)
         return url
@@ -232,16 +228,16 @@ class Endpoint(Route):
         return iter([self])
 
     def __repr__(self):
-        return "%s(target=%r, guards=%r, prefix=%r)" % (
+        return "%s(target=%r, guards=%r, pattern=%r)" % (
             self.__class__.__name__, self.target, self.guards,
-            self.prefix.pattern if self.prefix else None)
+            self.pattern.pattern if self.pattern else None)
 
     __str__ = __repr__
 
 class RootEndpoint(Endpoint):
-    """ Endpoint route with no prefix"""
+    """ Endpoint route with no pattern"""
 
-    def match_prefix(self, path_info):
+    def match_pattern(self, path_info):
         if not path_info or path_info == "/":
             return "", ()
         raise NoURLPatternMatched()
@@ -249,7 +245,7 @@ class RootEndpoint(Endpoint):
 class RouteGroup(Route):
     """ Route which represents a group of other routes
 
-    Can have its own ``guards`` and a URL ``prefix``.
+    Can have its own ``guards`` and a URL ``pattern``.
 
     Additional to :class:`.Route` params are:
 
@@ -257,8 +253,8 @@ class RouteGroup(Route):
         a list of :class:`Route` objects
     """
 
-    def __init__(self, routes, guards, prefix=None):
-        super(RouteGroup, self).__init__(guards, prefix)
+    def __init__(self, routes, guards, pattern=None):
+        super(RouteGroup, self).__init__(guards, pattern)
         self.routes = routes
 
     def index(self):
@@ -269,8 +265,8 @@ class RouteGroup(Route):
                 if r.name in idx:
                     raise RouteConfigurationError(
                         "route this name '%s' already defined")
-                if self.prefix or r.prefix:
-                    idx[r.name] = self.prefix + r.prefix
+                if self.pattern or r.pattern:
+                    idx[r.name] = self.pattern + r.pattern
                 else:
                     idx[r.name] = URLPattern("/")
             elif isinstance(r, RouteGroup):
@@ -279,7 +275,7 @@ class RouteGroup(Route):
                     raise RouteConfigurationError(
                         "route this name '%s' already defined")
                 for (n, u) in ridx.items():
-                    idx[n] = self.prefix + u
+                    idx[n] = self.pattern + u
         return idx
 
     @cached_property
@@ -295,7 +291,7 @@ class RouteGroup(Route):
         return url
 
     def match(self, path_info, request):
-        path_info, args = self.match_prefix(path_info)
+        path_info, args = self.match_pattern(path_info)
         guarded = []
         kwargs = self.match_guards(request)
         for route in self.routes:
@@ -324,8 +320,8 @@ class RouteGroup(Route):
         return iter(self.routes)
 
     def __repr__(self):
-        return "%s(routes=%r, guards=%r, prefix=%r)" % (
-            self.__class__.__name__, self.routes, self.guards, self.prefix)
+        return "%s(routes=%r, guards=%r, pattern=%r)" % (
+            self.__class__.__name__, self.routes, self.guards, self.pattern)
 
     __str__ = __repr__
 

@@ -53,9 +53,9 @@ def traverse_routes(route, path="/"):
         return [(route.method, path, route)]
 
 def join_path(a, r):
-    if not r.prefix:
+    if not r.pattern:
         return a
-    b = r.prefix.pattern
+    b = r.pattern.pattern
     if a.endswith("/"):
         a = a[:-1]
     if b.startswith("/"):
