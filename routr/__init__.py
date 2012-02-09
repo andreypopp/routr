@@ -7,6 +7,7 @@
 
 import re
 from urllib import urlencode
+from pkg_resources import iter_entry_points
 
 from webob.exc import HTTPException
 from routr.utils import import_string, cached_property
@@ -16,7 +17,8 @@ from routr.exc import (
     RouteReversalError)
 
 __all__ = (
-    "route", "Route", "Endpoint", "RootEndpoint", "RouteGroup",
+    "route", "include",
+    "Route", "Endpoint", "RootEndpoint", "RouteGroup",
     "GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "TRACE")
 
 GET = "GET"
@@ -28,6 +30,33 @@ OPTIONS = "OPTIONS"
 TRACE = "TRACE"
 
 _http_methods = set([GET, POST, PUT, DELETE, HEAD, OPTIONS, TRACE])
+
+def include(spec):
+    """ Include routes by ``spec``
+
+    :param spec:
+        asset specification which points to :class:`.Route` instance
+    """
+    r = import_string(spec)
+    if not isinstance(r, Route):
+        raise RouteConfigurationError(
+            "route included by '%s' isn't a route" % spec)
+    return r
+
+def plug(name):
+    """ Plug routes by ``setuptools`` entry points, identified by ``name``
+
+    :param name:
+        entry point name to query routes
+    """
+    routes = []
+    for p in iter_entry_points("routr", name=name):
+        r = p.load()
+        if not isinstance(r, Route):
+            raise RouteConfigurationError(
+                "entry point '%s' doesn't point at Route instance" % p)
+        routes.append(r)
+    return RouteGroup(routes, [])
 
 def route(*directives, **kwargs):
     """ Directive for configuring routes in application"""

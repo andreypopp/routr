@@ -72,6 +72,10 @@ primary way to define routes:
 
 .. autofunction:: routr.route
 
+.. autofunction:: routr.include
+
+.. autofunction:: routr.plug
+
 For the complete reference, these are classes which are constructed by
 :func:`routr.route`:
 
