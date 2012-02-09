@@ -176,6 +176,12 @@ class TestRouteGroup(TestRouting):
             route("comments", "comments", name="comments"))
         self.assertEqual(r.reverse("news", "hello"), "/api/news/hello/")
 
+        r = route("api",
+            route(GET, "news", name="get-news"),
+            route(POST, "news", name="create-news"))
+        self.assertEqual(r.reverse("get-news"), "/api")
+        self.assertEqual(r.reverse("create-news"), "/api")
+
     def test_reverse_empty_prefix(self):
         r = route(
             route("news", name="news"))
@@ -234,6 +240,19 @@ class TestRouteGroup(TestRouting):
         req = Request.blank("/api/comments")
         (args, kwargs), view = r(req)
         self.assertEqual(view(*args, **kwargs), "api_comments")
+
+    def test_by_method(self):
+        r = route("api",
+            route(GET, "news_get"),
+            route(POST, "news_post"))
+
+        req = Request.blank("/api", {"REQUEST_METHOD": "POST"})
+        (args, kwargs), view = r(req)
+        self.assertEqual(view, "news_post")
+
+        req = Request.blank("/api")
+        (args, kwargs), view = r(req)
+        self.assertEqual(view, "news_get")
 
     def test_method_inner(self):
         def news():
