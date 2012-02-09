@@ -80,12 +80,17 @@ def route(*directives, **kwargs):
             or hasattr(d, "__call__")
                 and not isinstance(d, Route))
 
+    def view_ref(d):
+        if isinstance(d, str):
+            return ViewRef(d)
+        return d
+
     name = kwargs.pop("name", None)
 
     # root directive
     if len(directives) == 1 and is_view_ref(directives[0]):
         view = directives[0]
-        return RootEndpoint(ViewRef(view), method or GET, name, guards)
+        return RootEndpoint(view_ref(view), method or GET, name, guards)
 
     # endpoint directive
     elif (len(directives) == 2
@@ -93,7 +98,7 @@ def route(*directives, **kwargs):
             and is_view_ref(directives[1])):
         prefix, view = directives
         return Endpoint(
-            ViewRef(view), method or GET, name, guards, prefix=prefix)
+            view_ref(view), method or GET, name, guards, prefix=prefix)
 
     # route list with prefix
     elif (len(directives) > 1
@@ -336,20 +341,15 @@ class RouteGroup(Route):
 
     __str__ = __repr__
 
-class ViewRef(object):
+class ViewRef(str):
     """ View reference
 
     :param view_ref:
         import spec or callable to reference to
     """
 
-    def __init__(self, view_ref):
-        self.view_ref = view_ref
-
     @cached_property
     def view(self):
-        if hasattr(self.view_ref, "__call__"):
-            return self.view_ref
         return import_string(self.view_ref)
 
     @property

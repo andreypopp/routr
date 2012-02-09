@@ -279,8 +279,7 @@ class TestRouteDirective(TestCase):
         self.assertEqual(r.prefix, None)
         self.assertEqual(r.guards, [])
         self.assertIsInstance(r, RootEndpoint)
-        self.assertIsInstance(r.view, ViewRef)
-        self.assertEqual(r.view.view_ref, "myapp.myview")
+        self.assertEqual(r.view, "myapp.myview")
 
     def test_root_endpoint_func(self):
         def view():
@@ -289,24 +288,21 @@ class TestRouteDirective(TestCase):
         self.assertEqual(r.prefix, None)
         self.assertEqual(r.guards, [])
         self.assertIsInstance(r, RootEndpoint)
-        self.assertIsInstance(r.view, ViewRef)
-        self.assertEqual(r.view.view_ref, view)
+        self.assertEqual(r.view, view)
 
     def test_root_endpoint_guards(self):
         r = route("myapp.myview", ["guard"])
         self.assertEqual(r.prefix, None)
         self.assertEqual(r.guards, ["guard"])
         self.assertIsInstance(r, Endpoint)
-        self.assertIsInstance(r.view, ViewRef)
-        self.assertEqual(r.view.view_ref, "myapp.myview")
+        self.assertEqual(r.view, "myapp.myview")
 
     def test_endpoint(self):
         r = route("news", "myapp.myview")
         self.assertNotEqual(r.prefix, None)
         self.assertEqual(r.guards, [])
         self.assertIsInstance(r, Endpoint)
-        self.assertIsInstance(r.view, ViewRef)
-        self.assertEqual(r.view.view_ref, "myapp.myview")
+        self.assertEqual(r.view, "myapp.myview")
 
     def test_endpoint_func(self):
         def view():
@@ -315,16 +311,14 @@ class TestRouteDirective(TestCase):
         self.assertNotEqual(r.prefix, None)
         self.assertEqual(r.guards, [])
         self.assertIsInstance(r, Endpoint)
-        self.assertIsInstance(r.view, ViewRef)
-        self.assertEqual(r.view.view_ref, view)
+        self.assertEqual(r.view, view)
 
     def test_endpoint_guards(self):
         r = route("news", "myapp.myview", ["guard"])
         self.assertNotEqual(r.prefix, None)
         self.assertEqual(r.guards, ["guard"])
         self.assertIsInstance(r, Endpoint)
-        self.assertIsInstance(r.view, ViewRef)
-        self.assertEqual(r.view.view_ref, "myapp.myview")
+        self.assertEqual(r.view, "myapp.myview")
 
     def test_route_list_no_prefix(self):
         r = route(
