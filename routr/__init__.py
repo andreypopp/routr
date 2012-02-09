@@ -229,7 +229,7 @@ class Endpoint(Route):
 
     def reverse(self, name, *args, **kwargs):
         if name != self.name:
-            raise RouteReversalError()
+            raise RouteReversalError("no route with name '%s'" % name)
         url = self.prefix.reverse(*args) if self.prefix else "/"
         if kwargs:
             url += "?" + urlencode(kwargs)
@@ -295,7 +295,7 @@ class RouteGroup(Route):
 
     def reverse(self, name, *args, **kwargs):
         if not name in self._cached_index:
-            raise RouteReversalError()
+            raise RouteReversalError("no route with name '%s'" % name)
         url = self._cached_index[name].reverse(*args)
         if kwargs:
             url += "?" + urlencode(kwargs)
@@ -421,7 +421,9 @@ class URLPattern(object):
         for arg in args:
             r = self._type_re.sub(str(arg), self.pattern, 1)
         if self._type_re.search(r):
-            raise RouteReversalError()
+            raise RouteReversalError(
+                "not enough params for reversal of '%s' route,"
+                " only %r was supplied" % (self.pattern, args))
         return r
 
     def match(self, path_info):
