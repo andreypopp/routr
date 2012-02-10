@@ -7,7 +7,7 @@
 
 import sys
 
-__all__ = ("import_string", "cached_property", "ImportStringError")
+__all__ = ("import_string", "cached_property", "ImportStringError", "join")
 
 class cached_property(object):
     """ Just like ``property`` but computed only once"""
@@ -112,3 +112,8 @@ class ImportStringError(ImportError):
     def __repr__(self):
         return '<%s(%r, %r)>' % (self.__class__.__name__, self.import_name,
                                  self.exception)
+
+def join(a, b):
+    a = a or ""
+    b = b or ""
+    return a.rstrip("/") + "/" + b.lstrip("/")

@@ -10,7 +10,7 @@ from urllib import urlencode
 from pkg_resources import iter_entry_points
 
 from webob.exc import HTTPException
-from routr.utils import import_string, cached_property
+from routr.utils import import_string, cached_property, join
 from routr.exc import (
     NoMatchFound, NoURLPatternMatched, RouteGuarded,
     MethodNotAllowed, RouteConfigurationError, InvalidRoutePattern,
@@ -425,8 +425,3 @@ class URLPattern(object):
 
     def __repr__(self):
         return "<routr.URLPattern %s>" % self.pattern
-
-def join(a, b):
-    a = a or ""
-    b = b or ""
-    return a.rstrip("/") + "/" + b.lstrip("/")

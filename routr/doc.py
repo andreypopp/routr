@@ -16,32 +16,28 @@ from sphinx.util.docstrings import prepare_docstring
 from sphinx.util.nodes import nested_parse_with_titles
 from sphinxcontrib import httpdomain
 
-from routr.utils import import_string, cached_property
+from routr.utils import import_string, cached_property, join
 from routr import RouteGroup
 
 __all__ = ("AutoRoutrDirective",)
 
 def traverse_routes(route, path=None):
     """ Traverse routes by flatten them"""
-    path = path or route.pattern.pattern or "/"
+
+    def acc_path(acc, r):
+        if not r.pattern:
+            return acc
+        return join(acc, r.pattern.pattern)
+
+    path = path or (route.pattern.pattern if route.pattern else None) or "/"
     if isinstance(route, RouteGroup):
         return [(m, p, r)
             for subroute in route.routes
             for (m, p, r) in traverse_routes(
                 subroute,
-                path=join_path(path, subroute))]
+                path=acc_path(path, subroute))]
     else:
         return [(route.method, path, route)]
-
-def join_path(a, r):
-    if not r.pattern:
-        return a
-    b = r.pattern.pattern
-    if a.endswith("/"):
-        a = a[:-1]
-    if b.startswith("/"):
-        b = b[1:]
-    return a + "/" + b
 
 def http_directive(method, path, content):
     """ Construct line for http directive from httpdomain
