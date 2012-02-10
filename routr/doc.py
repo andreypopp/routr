@@ -41,8 +41,9 @@ from routr import RouteGroup
 
 __all__ = ("AutoRoutrDirective",)
 
-def traverse_routes(route, path="/"):
+def traverse_routes(route, path=None):
     """ Traverse routes by flatten them"""
+    path = path or route.pattern.pattern or "/"
     if isinstance(route, RouteGroup):
         return [(m, p, r)
             for subroute in route.routes
@@ -115,7 +116,15 @@ class AutoRoutrDirective(Directive):
         for method, path, route in traverse_routes(routes):
             if not self.allowed(path):
                 continue
-            docstring = prepare_docstring(route.target.__doc__ or "")
+            if isinstance(route.target, basestring):
+                try:
+                    target = import_string(route.target)
+                except ImportError:
+                    print >> sys.stderr, "cannot import %s" % route.target
+                    continue
+            else:
+                target = route.target
+            docstring = prepare_docstring(target.__doc__ or "")
             for line in http_directive(method, path, docstring):
                 yield line
 
