@@ -6,17 +6,63 @@
 routr -- lightweight request routing for WebOb
 ==============================================
 
-Routr was built to solve the problem of mapping WebOb request to Python code
-providing:
+Routr is a solution for mapping WSGI request (more specifically -- WebOb
+request) to Python code. It provides:
 
-* Declarative configuration -- all configuration done in declarative fashion, so
-  you can even generate documentation from your application's routes.
+* Non-intrusiveness -- routr allows you to map request on a plain Python
+  function thus not requiring you to write separate "view-level" API for your
+  application.
 
-* Non-intrusiveness -- you can map request to plain Python function thus
-  you're not required to write separate view layer for your application.
+* Declarativeness -- you configure routes in completely declarative fashion,
+  it means routes are readable and easy to understand and follow. Routr also
+  provides a way to generate documentation from your definitions (via Sphinx
+  extension).
+
+* Extensibility -- you can make your routes extensible through plug-in
+  mechanisms or allow your routes to be included into application written by
+  others.
 
 Usage
 -----
+
+I'll just give you an example WSGI application with no explanations -- code is
+better than words here, so the basic usage is::
+
+  from routr import route, POST,
+  from myapp.views import list_news, get_news, create_news
+  from myapp.views import get_comments, create_comment
+
+  routes = route("news",
+    route("/", list_news),
+    route(POST, "/", create_news),
+    route("/{id:int}/", get_news),
+    route("/{id:int/comments", get_comments),
+    route("/{id:int/comments", get_comments),
+    route(POST, "/{id:int/comments", create_comment),
+    )
+
+You just use :func:`routr.route` function to define your routes, then you can
+dispatch request against them::
+
+  from routes.exc import NoMatchFound
+  from webob import Request, exc
+
+  def application(environ, start_response):
+    request = Request(environ)
+    try:
+      (args, kwargs), view = routes(request)
+      response = view(*args, **kwargs)
+    except NoMatchFound, e:
+      response = e.response
+    except exc.HTTPException, e:
+      response = e
+    return response(environ, start_response)
+
+This is an example of WSGI application using WebOb and routr.
+
+Note that neither of these are not dictating you how to build your application
+-- you're completely free about how to structure and organize your application's
+code.
 
 Matching query string
 ---------------------
