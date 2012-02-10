@@ -328,16 +328,62 @@ class RouteGroup(Route):
 
     __str__ = __repr__
 
+def parse_args(line):
+    args = []
+    kwargs = {}
+    if not line:
+        return args, kwargs
+    for item in (a.strip() for a in line.split(",") if a):
+        if "=" in item:
+            k, v = item.split("=", 1)
+            kwargs[k.strip()] = v.strip()
+        else:
+            args.append(item)
+    return args, kwargs
+
+def handle_str(args):
+    if args:
+        raise InvalidRoutePattern("'str' type doesn't accept args")
+    return ("[^/]+", None)
+
+def handle_path(args):
+    if args:
+        raise InvalidRoutePattern("'path' type doesn't accept args")
+    return (".*", None)
+
+def handle_int(args):
+    if args:
+        raise InvalidRoutePattern("'path' type doesn't accept args")
+    return ("[0-9]+", int)
+
+def handle_any(args):
+    args, kwargs = parse_args(args)
+    if not args:
+        raise InvalidRoutePattern("'any' type requires positional args")
+    if kwargs:
+        raise InvalidRoutePattern("'any' doesn't accept keyword args")
+
+    return ("(" + "|".join("(" + re.escape(x) + ")" for x in args) + ")", None)
+
 class URLPattern(object):
 
-    _type_re = re.compile("{([a-z]+)}")
+    _type_re = re.compile("""
+        {
+        (?P<label>[a-z]+)            # label
+        (:(?P<type>[a-z]+))?         # optional type identifier
+        (\(                          # optional args
+            (?P<args>[a-z= ,]*)
+        \))?
+        }""", re.VERBOSE)
+
 
     _typemap = {
-        "": ("[^/]+", None),
-        "str": ("[^/]+", None),
-        "string": ("[^/]+", None),
-        "path": (".*", None),
-        "int": ("[0-9]+", int),
+        None:       handle_str,
+        "str":      handle_str,
+        "string":   handle_str,
+        "path":     handle_path,
+        "int":      handle_int,
+        "any":      handle_any,
     }
 
     def __init__(self, pattern):
@@ -369,12 +415,14 @@ class URLPattern(object):
         last = 0
         for n, m in enumerate(self._type_re.finditer(self.pattern)):
             compiled += re.escape(self.pattern[last:m.start()])
-            typ = m.group(1)
+            typ, label, args = (
+                m.group("type"), m.group("label"), m.group("args"))
             if not typ in self._typemap:
-                raise InvalidRoutePattern(self.pattern)
-            r, c = self._typemap[typ]
+                raise InvalidRoutePattern(
+                    "unknown type '%s' in pattern '%s'" % (typ, self.pattern))
+            r, c = self._typemap[typ](args)
             name = "_gpt%d" % n
-            names.append((name, c))
+            names.append((name, c, label))
             compiled += "(?P<%s>%s)" % (name, r)
             last = m.end()
         compiled += re.escape(self.pattern[last:])
@@ -398,17 +446,18 @@ class URLPattern(object):
     def match(self, path_info):
         if self.is_exact:
             if not path_info.startswith(self.pattern):
-                raise NoURLPatternMatched()
+                raise NoURLPatternMatched(path_info)
             return path_info[self._pattern_len:], ()
 
         m = self.compiled.match(path_info)
         if not m:
-            raise NoURLPatternMatched()
+            raise NoURLPatternMatched("no match for '%s' against '%s'" % (
+                path_info, self._compiled.pattern))
         groups = m.groupdict()
         try:
             args = tuple(
                 c(groups[n]) if c else groups[n]
-                for (n, c) in self._names)
+                for (n, c, l) in self._names)
         except ValueError:
             raise NoURLPatternMatched()
         return path_info[m.end():], args

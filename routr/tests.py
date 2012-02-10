@@ -9,7 +9,7 @@ from unittest import TestCase
 from webob import Request, exc
 
 from routr.schema import QueryParams, String, Int, Optional
-from routr import Route, Endpoint, RootEndpoint, RouteGroup
+from routr import Route, Endpoint, RootEndpoint, RouteGroup, URLPattern
 from routr import route, RouteConfigurationError
 from routr import POST, GET
 from routr.exc import (
@@ -54,7 +54,7 @@ class TestEndpoint(TestRouting):
         self.assertEqual(r.reverse("news"), "/news")
         self.assertRaises(RouteReversalError, r.reverse, "news2")
 
-        r = route("news/{int}/", "target", name="news")
+        r = route("news/{id:int}/", "target", name="news")
         self.assertEqual(r.reverse("news", 42), "/news/42/")
         self.assertRaises(RouteReversalError, r.reverse, "news2")
 
@@ -90,7 +90,7 @@ class TestEndpoint(TestRouting):
     def test_param_pattern_int(self):
         def target(id):
             return id
-        r = route("/news/{int}/", target)
+        r = route("/news/{id:int}/", target)
         req = Request.blank("/news/42/")
         (args, kwargs), target = r(req)
         self.assertEqual(target(*args, **kwargs), 42)
@@ -103,7 +103,7 @@ class TestEndpoint(TestRouting):
         def target(a, b, c):
             return a, b, c
 
-        r = route("/news/{int}/{int}/{int}/", target)
+        r = route("/news/{a:int}/{b:int}/{c:int}/", target)
         req = Request.blank("/news/42/41/40/")
         (args, kwargs), target = r(req)
         self.assertEqual(target(*args, **kwargs), (42, 41, 40))
@@ -112,7 +112,7 @@ class TestEndpoint(TestRouting):
         def target(id):
             return id
 
-        r = route("/news/{string}/", target)
+        r = route("/news/{id:string}/", target)
 
         req = Request.blank("/news/42/")
         (args, kwargs), target = r(req)
@@ -126,13 +126,13 @@ class TestEndpoint(TestRouting):
         def target(id):
             return id
 
-        r = route("/news/{path}", target)
+        r = route("/news/{p:path}", target)
 
         req = Request.blank("/news/42/news")
         (args, kwargs), target = r(req)
         self.assertEqual(target(*args, **kwargs), "42/news")
 
-        r = route("/news/{path}/comments", target)
+        r = route("/news/{p:path}/comments", target)
 
         req = Request.blank("/news/42/news/comments")
         (args, kwargs), target = r(req)
@@ -142,7 +142,7 @@ class TestEndpoint(TestRouting):
         def target(id, q=None, page=1):
             return id, q, page
         r = route(
-            "/news/{int}/", target,
+            "/news/{id:int}/", target,
             guards=QueryParams(q=Optional(String), page=Optional(Int)))
 
         req = Request.blank("/news/42/")
@@ -172,7 +172,7 @@ class TestRouteGroup(TestRouting):
         self.assertRaises(RouteReversalError, r.reverse, "a")
 
         r = route("api",
-            route("news/{str}/", "news", name="news"),
+            route("news/{id}/", "news", name="news"),
             route("comments", "comments", name="comments"))
         self.assertEqual(r.reverse("news", "hello"), "/api/news/hello/")
 
@@ -206,6 +206,23 @@ class TestRouteGroup(TestRouting):
 
         self.assertNoMatch(r, "/newsweeek")
         self.assertNoMatch(r, "/ne")
+
+    def test_group_inexact_pattern(self):
+        r = route("news",
+                route("{id:int}",
+                    route("comments", "view")))
+        req = Request.blank("/news/42/comments")
+        self.assertEqual(r(req), (((42,), {}), "view"))
+
+        r = route("news/{id:int}",
+                route("comments", "view"))
+        req = Request.blank("/news/42/comments")
+        self.assertEqual(r(req), (((42,), {}), "view"))
+
+        r = route("news",
+                route("{id:int}/comments", "view"))
+        req = Request.blank("/news/42/comments")
+        self.assertEqual(r(req), (((42,), {}), "view"))
 
     def test_complex_match(self):
         def news():
@@ -374,3 +391,37 @@ class TestRouteDirective(TestCase):
 
     def test_invalid_routes(self):
         self.assertRaises(RouteConfigurationError, route)
+
+class TestURLPattern(TestCase):
+
+    def test_int(self):
+        p = URLPattern("/a/{id:int}/b/")
+        self.assertTrue(not p.is_exact)
+        self.assertEqual(p.match("/a/42/b/"), ('', (42,)))
+
+    def test_str(self):
+        p = URLPattern("/a/{id}/b/")
+        self.assertTrue(not p.is_exact)
+        self.assertEqual(p.match("/a/42/b/"), ('', ("42",)))
+
+        p = URLPattern("/a/{id:str}/b/")
+        self.assertTrue(not p.is_exact)
+        self.assertEqual(p.match("/a/42/b/"), ('', ("42",)))
+
+        p = URLPattern("/a/{id:string}/b/")
+        self.assertTrue(not p.is_exact)
+        self.assertEqual(p.match("/a/42/b/"), ('', ("42",)))
+
+    def test_path(self):
+        p = URLPattern("/a/{id:path}/b/")
+        self.assertTrue(not p.is_exact)
+        self.assertEqual(p.match("/a/42/43/b/"), ('', ("42/43",)))
+
+    def test_any(self):
+        p = URLPattern("/a/{id:any(aaa, bbb, ccc)}/b/")
+        self.assertTrue(not p.is_exact)
+        self.assertEqual(p.match("/a/aaa/b/"), ('', ("aaa",)))
+        self.assertEqual(p.match("/a/bbb/b/"), ('', ("bbb",)))
+        self.assertEqual(p.match("/a/ccc/b/"), ('', ("ccc",)))
+        self.assertRaises(NoURLPatternMatched, p.match, "/a")
+        self.assertRaises(NoURLPatternMatched, p.match, "/a/abc/b/")
