@@ -6,26 +6,6 @@
 """
 
 import sys
-
-try:
-    import docutils
-except ImportError:
-    print >> sys.stderr, "docutils should be installed for routr.doc"
-    raise
-
-try:
-    import sphinx
-except ImportError:
-    print >> sys.stderr, "sphinx should be installed for routr.doc"
-    raise
-
-try:
-    from sphinxcontrib import httpdomain
-except ImportError:
-    print >> sys.stderr, \
-        "sphinxcontrib-httpdomain should be installed for routr.doc"
-    raise
-
 from fnmatch import fnmatchcase
 
 from docutils import nodes
@@ -141,4 +121,3 @@ def setup(app):
     if "http" not in app.domains:
         httpdomain.setup(app)
     app.add_directive("autoroutr", AutoRoutrDirective)
-
