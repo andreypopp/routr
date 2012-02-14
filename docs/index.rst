@@ -36,9 +36,8 @@ better than words here, so the basic usage is::
     route("/", list_news),
     route(POST, "/", create_news),
     route("/{id:int}/", get_news),
-    route("/{id:int/comments", get_comments),
-    route("/{id:int/comments", get_comments),
-    route(POST, "/{id:int/comments", create_comment),
+    route("/{id:int}/comments", get_comments),
+    route(POST, "/{id:int}/comments", create_comment),
     )
 
 You just use :func:`routr.route` function to define your routes, then you can
