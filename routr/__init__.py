@@ -19,7 +19,7 @@ from routr.exc import (
 __all__ = (
     "route", "include", "plug"
     "Route", "Endpoint", "RootEndpoint", "RouteGroup",
-    "GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "TRACE")
+    "GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "TRACE", "PATCH")
 
 GET = "GET"
 POST = "POST"
@@ -28,6 +28,7 @@ DELETE = "DELETE"
 HEAD = "HEAD"
 OPTIONS = "OPTIONS"
 TRACE = "TRACE"
+PATCH = "PATCH"
 
 _http_methods = set([GET, POST, PUT, DELETE, HEAD, OPTIONS, TRACE])
 
