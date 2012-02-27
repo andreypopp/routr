@@ -82,7 +82,7 @@ def route(*directives, **kwargs):
     # root directive
     if len(directives) == 1 and not isinstance(directives[0], Route):
         target = directives[0]
-        return RootEndpoint(target, method or GET, name, guards)
+        return RootEndpoint(target, method or GET, name, guards, **kwargs)
 
     # endpoint directive
     elif (len(directives) == 2
@@ -90,7 +90,7 @@ def route(*directives, **kwargs):
             and not isinstance(directives[1], Route)):
         pattern, target = directives
         return Endpoint(
-            target, method or GET, name, guards, pattern)
+            target, method or GET, name, guards, pattern, **kwargs)
 
     # route list with pattern
     elif (len(directives) > 1
@@ -100,14 +100,14 @@ def route(*directives, **kwargs):
         if method:
             raise RouteConfigurationError(
                 "'method' doesn't make sense for route groups")
-        return RouteGroup(routes, guards, pattern)
+        return RouteGroup(routes, guards, pattern, **kwargs)
 
     # route list
     elif all(isinstance(d, Route) for d in directives):
         if method:
             raise RouteConfigurationError(
                 "'method' doesn't make sense for route groups")
-        return RouteGroup(directives, guards, None)
+        return RouteGroup(directives, guards, None, **kwargs)
 
     # error here
     else:
@@ -123,9 +123,10 @@ class Route(object):
         pattern for URL pattern
     """
 
-    def __init__(self, guards, pattern):
+    def __init__(self, guards, pattern, **anotations):
         self.guards = guards
         self.pattern = self.compile_pattern(pattern)
+        self.anotations = anotations
 
     def compile_pattern(self, pattern):
         if not pattern:
@@ -205,8 +206,8 @@ class Endpoint(Route):
         otherwise ``None`` is allowed
     """
 
-    def __init__(self, target, method, name, guards, pattern):
-        super(Endpoint, self).__init__(guards, pattern)
+    def __init__(self, target, method, name, guards, pattern, **anotations):
+        super(Endpoint, self).__init__(guards, pattern, **anotations)
         self.target = target
         self.method = method
         self.name = name
@@ -241,8 +242,9 @@ class Endpoint(Route):
 class RootEndpoint(Endpoint):
     """ Endpoint route with no pattern"""
 
-    def __init__(self, target, method, name, guards):
-        super(RootEndpoint, self).__init__(target, method, name, guards, None)
+    def __init__(self, target, method, name, guards, **anotations):
+        super(RootEndpoint, self).__init__(
+            target, method, name, guards, None, **anotations)
 
     def match_pattern(self, path_info):
         if not path_info or path_info == "/":
@@ -260,8 +262,8 @@ class RouteGroup(Route):
         a list of :class:`Route` objects
     """
 
-    def __init__(self, routes, guards, pattern):
-        super(RouteGroup, self).__init__(guards, pattern)
+    def __init__(self, routes, guards, pattern, **anotations):
+        super(RouteGroup, self).__init__(guards, pattern, **anotations)
         self.routes = routes
 
     def index(self):
