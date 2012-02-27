@@ -90,7 +90,7 @@ def route(*directives, **kwargs):
             and not isinstance(directives[1], Route)):
         pattern, target = directives
         return Endpoint(
-            target, method or GET, name, guards, pattern=pattern)
+            target, method or GET, name, guards, pattern)
 
     # route list with pattern
     elif (len(directives) > 1
@@ -100,14 +100,14 @@ def route(*directives, **kwargs):
         if method:
             raise RouteConfigurationError(
                 "'method' doesn't make sense for route groups")
-        return RouteGroup(routes, guards, pattern=pattern)
+        return RouteGroup(routes, guards, pattern)
 
     # route list
     elif all(isinstance(d, Route) for d in directives):
         if method:
             raise RouteConfigurationError(
                 "'method' doesn't make sense for route groups")
-        return RouteGroup(directives, guards)
+        return RouteGroup(directives, guards, None)
 
     # error here
     else:
@@ -123,7 +123,7 @@ class Route(object):
         pattern for URL pattern
     """
 
-    def __init__(self, guards, pattern=None):
+    def __init__(self, guards, pattern):
         self.guards = guards
         self.pattern = self.compile_pattern(pattern)
 
@@ -205,7 +205,7 @@ class Endpoint(Route):
         otherwise ``None`` is allowed
     """
 
-    def __init__(self, target, method, name, guards, pattern=None):
+    def __init__(self, target, method, name, guards, pattern):
         super(Endpoint, self).__init__(guards, pattern)
         self.target = target
         self.method = method
@@ -241,6 +241,9 @@ class Endpoint(Route):
 class RootEndpoint(Endpoint):
     """ Endpoint route with no pattern"""
 
+    def __init__(self, target, method, name, guards):
+        super(RootEndpoint, self).__init__(target, method, name, guards, None)
+
     def match_pattern(self, path_info):
         if not path_info or path_info == "/":
             return "", ()
@@ -257,7 +260,7 @@ class RouteGroup(Route):
         a list of :class:`Route` objects
     """
 
-    def __init__(self, routes, guards, pattern=None):
+    def __init__(self, routes, guards, pattern):
         super(RouteGroup, self).__init__(guards, pattern)
         self.routes = routes
 
