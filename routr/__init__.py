@@ -114,6 +114,29 @@ def route(*directives, **kwargs):
         # TODO: expand on this
         raise RouteConfigurationError("improper usage of 'route' directive")
 
+class Trace(object):
+    """ Route matching trace"""
+
+    def __init__(self, args, kwargs, routes):
+        self.args = args
+        self.kwargs = kwargs
+        self.routes = routes
+
+    @property
+    def endpoint(self):
+        return self.routes[-1] if self.routes else None
+
+    def step(self, tr):
+        args = self.args + tr.args
+        kwargs = dict(self.kwargs)
+        kwargs.update(tr.kwargs)
+        routes = list(self.routes)
+        routes.extend(tr.routes)
+        return Trace(args, kwargs, routes)
+
+    def __getattr__(self, name):
+        return getattr(self.endpoint, name)
+
 class Route(object):
     """ Base class for routes
 
@@ -166,7 +189,7 @@ class Route(object):
         Returns route target and collected ``*args`` and ``**kwargs``.
 
         :rtype:
-            ``((tuple(), dict()), object)``
+            :class:`.Trace`
 
         :raises routr.exc.NoURLPatternMatched:
             if no route was matched by URL
@@ -219,7 +242,7 @@ class Endpoint(Route):
         if self.method != request.method:
             raise MethodNotAllowed()
         kwargs = self.match_guards(request)
-        return (args, kwargs), self.target
+        return Trace(args, kwargs, [self])
 
     def reverse(self, name, *args, **kwargs):
         if name != self.name:
@@ -303,9 +326,10 @@ class RouteGroup(Route):
         path_info, args = self.match_pattern(path_info)
         guarded = []
         kwargs = self.match_guards(request)
+        trace = Trace(args, kwargs, [self])
         for route in self.routes:
             try:
-                (r_args, r_kwargs), target = route.match(path_info, request)
+                subtrace = route.match(path_info, request)
             except NoURLPatternMatched:
                 continue
             except MethodNotAllowed, e:
@@ -315,9 +339,7 @@ class RouteGroup(Route):
                 guarded.append(e)
                 continue
             else:
-                kwargs.update(r_kwargs)
-                args = args + r_args
-                return (args, kwargs), target
+                return trace.step(subtrace)
         if guarded:
             # NOTE
             #   we raise now only first guard falure
