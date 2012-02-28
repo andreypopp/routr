@@ -6,7 +6,7 @@
 routr -- lightweight request routing for WebOb
 ==============================================
 
-Routr provides a set of utilities to map WebOb request to an artbitrary Python
+Routr provides a set of tools to map WebOb request to an artbitrary Python
 object. It was designed with following points in mind:
 
 * *Non-intrusiveness* -- there're no "frameworkish" things, just a mechanism to
@@ -17,7 +17,7 @@ object. It was designed with following points in mind:
   can define *guards* for your routes, provide *annotations* to them or even
   replace parts of routing mechanism by your own implementations.
 
-* *Declarativeness* -- configuration process is designed to be declarative. It
+* *Declarativeness* -- configuration process is designed to be declarative. That
   means routes are readable and easy to understand and follow. Routr also
   provides a way to automatically generate documentation from routes (via Sphinx
   extension).
@@ -29,7 +29,7 @@ Basic usage
 -----------
 
 I'll just give you an example WSGI application with no explanations -- code is
-better than words here, so the basic usage is::
+better than words here::
 
   from routr import route, POST, GET
   from myapp.views import list_news, get_news, create_news
@@ -43,9 +43,8 @@ better than words here, so the basic usage is::
     route(POST, "/{id:int}/comments", create_comment),
     )
 
-You just use :func:`routr.route` function to define your routes, then you can
-dispatch request against them. This is an example of WSGI application using
-WebOb and routr::
+You use :func:`routr.route` function to define your routes, then you can
+dispatch request against them::
 
   from routes.exc import NoMatchFound
   from webob import Request, exc
@@ -70,8 +69,7 @@ code.
 Trace object
 ------------
 
-The result of matching routes is a :class:`routr.Trace` object. This object
-holds collected ``*args`` and ``**kwargs`` and a path of matched routes:
+The result of matching routes is a :class:`routr.Trace` object:
 
 .. autoclass:: routr.Trace
 
@@ -134,16 +132,16 @@ those routes which was annotated correspondingly.
 Generating documentation from routes
 ------------------------------------
 
-Let's suppose we have the following routes defined in our app:
+Let's suppose we have following routes defined:
 
 .. literalinclude:: ./examples.py
 
-Now we want to generate documentation from these definitions, we can use
-``autoroutr`` directive which is built on top of `sphinx-httpdomain`_::
+We want to generate documentation from these definitions. For that purpose
+there's ``autoroutr`` directive which is built on top of `sphinx-httpdomain`_::
 
   .. autoroutr:: examples:routes
 
-This gives us the following:
+That gives us as a result:
 
   .. autoroutr:: examples:routes
 
