@@ -17,7 +17,7 @@ from routr.exc import (
     RouteReversalError)
 
 __all__ = (
-    "route", "include", "plug"
+    "route", "include", "plug", "Trace",
     "Route", "Endpoint", "RootEndpoint", "RouteGroup",
     "GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "TRACE", "PATCH")
 
@@ -115,7 +115,19 @@ def route(*directives, **kwargs):
         raise RouteConfigurationError("improper usage of 'route' directive")
 
 class Trace(object):
-    """ Route matching trace"""
+    """ A result of routes matching
+
+    :attr args:
+        collected positional arguments
+    :attr kwargs:
+        collected keyword arguments
+    :attr routes:
+        a list of matched routes with the endpoint route being the last one
+    :attr endpoint:
+        matched endpoint route
+
+    Attributes of :attr:`.endpoint` route are made available on trace itself.
+    """
 
     def __init__(self, args, kwargs, routes):
         self.args = args
