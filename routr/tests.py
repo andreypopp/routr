@@ -36,6 +36,7 @@ class TestRootEnpoint(TestRouting):
         r = route("target")
         req = Request.blank("/")
         tr = r(req)
+        self.assertEqual(len(tr.routes), 1)
         self.assertEqual(
             (tr.args, tr.kwargs, tr.target),
             ((), {}, "target"))
@@ -62,6 +63,7 @@ class TestEndpoint(TestRouting):
         r = route("news", "target")
         req = Request.blank("/news")
         tr = r(req)
+        self.assertEqual(len(tr.routes), 1)
         self.assertEqual(
             (tr.args, tr.kwargs, tr.target),
             ((), {}, "target"))
@@ -197,6 +199,7 @@ class TestRouteGroup(TestRouting):
 
         req = Request.blank("/news")
         tr = r(req)
+        self.assertEqual(len(tr.routes), 2)
         self.assertEqual(
             (tr.args, tr.kwargs, tr.target),
             ((), {}, "news"))
