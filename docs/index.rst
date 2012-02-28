@@ -66,6 +66,30 @@ Note that neither of these are not dictating you how to build your application
 -- you're completely free about how to structure and organize your application's
 code.
 
+Defining routes
+---------------
+
+As we've already seen routes are defined via :func:`routr.route` function which
+can be called in two ways, the first one is for defining endpoint routes::
+
+  route([method,] [pattern,] target, name=None, guards=None, **anotations)
+
+As you can see ``method`` and ``pattern`` are optional here, by default
+``method`` will be set to ``GET`` and pattern to ``/``. Argument ``target`` is
+an arbitrary object you want to associate endpoint route with, usually it will
+be a view callable or string which specifies one.
+
+Second form is for grouping routes together::
+
+  route([method,] [pattern,] *routes, name=None, guards=None, **anotations)
+
+There's ``*routes`` var sized argument which can contain one or more route
+definitions via same :func:`routr.route` so you can nest routes one inside
+others.
+
+URL patterns
+------------
+
 Trace object
 ------------
 
