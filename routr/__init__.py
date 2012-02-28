@@ -60,7 +60,15 @@ def plug(name):
     return RouteGroup(routes, [])
 
 def route(*directives, **kwargs):
-    """ Directive for configuring routes in application"""
+    """ Directive for configuring routes in application
+
+    :param directives:
+        ([method,] [pattern,] target) produces endpoint route
+        ([method,] [pattern,] *routes) produces route group
+    :param kwargs:
+        name and guards are treated as name and guards for routes, other keyword
+        args a are passed as annotations
+    """
     directives = list(directives)
     if not directives:
         raise RouteConfigurationError()
@@ -158,10 +166,10 @@ class Route(object):
         pattern for URL pattern
     """
 
-    def __init__(self, guards, pattern, **anotations):
+    def __init__(self, guards, pattern, **annotations):
         self.guards = guards
         self.pattern = self.compile_pattern(pattern)
-        self.anotations = anotations
+        self.annotations = annotations
 
     def compile_pattern(self, pattern):
         if not pattern:
@@ -241,8 +249,8 @@ class Endpoint(Route):
         otherwise ``None`` is allowed
     """
 
-    def __init__(self, target, method, name, guards, pattern, **anotations):
-        super(Endpoint, self).__init__(guards, pattern, **anotations)
+    def __init__(self, target, method, name, guards, pattern, **annotations):
+        super(Endpoint, self).__init__(guards, pattern, **annotations)
         self.target = target
         self.method = method
         self.name = name
@@ -277,9 +285,9 @@ class Endpoint(Route):
 class RootEndpoint(Endpoint):
     """ Endpoint route with no pattern"""
 
-    def __init__(self, target, method, name, guards, **anotations):
+    def __init__(self, target, method, name, guards, **annotations):
         super(RootEndpoint, self).__init__(
-            target, method, name, guards, None, **anotations)
+            target, method, name, guards, None, **annotations)
 
     def match_pattern(self, path_info):
         if not path_info or path_info == "/":
@@ -297,8 +305,8 @@ class RouteGroup(Route):
         a list of :class:`Route` objects
     """
 
-    def __init__(self, routes, guards, pattern, **anotations):
-        super(RouteGroup, self).__init__(guards, pattern, **anotations)
+    def __init__(self, routes, guards, pattern, **annotations):
+        super(RouteGroup, self).__init__(guards, pattern, **annotations)
         self.routes = routes
 
     def index(self):
