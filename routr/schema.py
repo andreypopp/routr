@@ -56,3 +56,13 @@ class QueryParams(object):
                 kwargs.pop(k)
         trace.kwargs.update(kwargs)
         return trace
+
+    def __add__(self, o):
+        s = SchemaNode(Mapping())
+        for c in self.schema.children:
+            s.add(c)
+        for c in o.schema.children:
+            s.add(c)
+        r = QueryParams()
+        r.schema = s
+        return r
