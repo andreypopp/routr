@@ -46,7 +46,7 @@ class QueryParams(object):
                     typ = typ()
                 self.schema.add(SchemaNode(typ, name=name))
 
-    def __call__(self, request):
+    def __call__(self, request, trace):
         try:
             kwargs = self.schema.deserialize(request.GET)
         except Invalid, e:
@@ -54,4 +54,5 @@ class QueryParams(object):
         for k, v in kwargs.items():
             if v is Optional.none:
                 kwargs.pop(k)
-        return kwargs
+        trace.kwargs.update(kwargs)
+        return trace

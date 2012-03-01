@@ -183,13 +183,10 @@ class Route(object):
             return path_info, ()
         return self.pattern.match(path_info)
 
-    def match_guards(self, request):
-        kwargs = {}
+    def match_guards(self, request, trace):
         for guard in self.guards:
-            guard_kwargs = guard(request)
-            if guard_kwargs:
-                kwargs.update(guard_kwargs)
-        return kwargs
+            trace = guard(request, trace)
+        return trace
 
     def __call__(self, request):
         """ Try to match route against ``request``
@@ -261,8 +258,9 @@ class Endpoint(Route):
             raise NoURLPatternMatched()
         if self.method != request.method:
             raise MethodNotAllowed()
-        kwargs = self.match_guards(request)
-        return Trace(args, kwargs, [self])
+        trace = Trace(args, {}, [self])
+        trace = self.match_guards(request, trace)
+        return trace
 
     def reverse(self, name, *args, **kwargs):
         if name != self.name:
@@ -345,8 +343,8 @@ class RouteGroup(Route):
     def match(self, path_info, request):
         path_info, args = self.match_pattern(path_info)
         guarded = []
-        kwargs = self.match_guards(request)
-        trace = Trace(args, kwargs, [self])
+        trace = Trace(args, {}, [self])
+        trace = self.match_guards(request, trace)
         for route in self.routes:
             try:
                 subtrace = route.match(path_info, request)
