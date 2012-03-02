@@ -137,25 +137,37 @@ class Trace(object):
     Attributes of :attr:`.endpoint` route are made available on trace itself.
     """
 
-    def __init__(self, args, kwargs, routes):
-        self.args = args
-        self.kwargs = kwargs
-        self.routes = routes
+    def __init__(self, args, kwargs, routes, payload=None):
+        self.__dict__["args"] = args
+        self.__dict__["kwargs"] = kwargs
+        self.__dict__["routes"] = routes
+        self.__dict__["payload"] = payload or {}
 
     @property
     def endpoint(self):
         return self.routes[-1] if self.routes else None
 
-    def step(self, tr):
+    @property
+    def target(self):
+        return self.endpoint.target
+
+    def __add__(self, tr):
         args = self.args + tr.args
         kwargs = dict(self.kwargs)
         kwargs.update(tr.kwargs)
         routes = list(self.routes)
         routes.extend(tr.routes)
-        return Trace(args, kwargs, routes)
+        payload = dict(self.payload)
+        payload.update(tr.payload)
+        return Trace(args, kwargs, routes, payload)
+
+    def __setattr__(self, name, value):
+        self.payload[name] = value
 
     def __getattr__(self, name):
-        return getattr(self.endpoint, name)
+        if not name in self.payload:
+            raise AttributeError(name)
+        return self.payload[name]
 
 class Route(object):
     """ Base class for routes
@@ -357,7 +369,7 @@ class RouteGroup(Route):
                 guarded.append(e)
                 continue
             else:
-                return trace.step(subtrace)
+                return trace + subtrace
         if guarded:
             # NOTE
             #   we raise now only first guard falure
