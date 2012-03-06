@@ -282,7 +282,9 @@ class RouteGroup(Route):
                 guarded.append(e)
                 continue
             else:
-                return (trace + subtrace) if subtrace is not None else trace
+                return ((trace + subtrace)
+                    if subtrace is not None and trace is not None
+                    else trace or subtrace)
         if guarded:
             # NOTE
             #   we raise now only first guard falure
