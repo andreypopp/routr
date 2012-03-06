@@ -174,12 +174,15 @@ class Endpoint(Route):
         self.method = method
         self.name = name
 
+    def match_method(self, request):
+        if self.method != request.method:
+            raise MethodNotAllowed()
+
     def match(self, path_info, request):
         path_info, args = self.match_pattern(path_info)
         if path_info:
             raise NoURLPatternMatched()
-        if self.method != request.method:
-            raise MethodNotAllowed()
+        self.match_method(request)
         trace = Trace(args, {}, [self])
         trace = self.match_guards(request, trace)
         return trace
