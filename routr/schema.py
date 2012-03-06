@@ -10,7 +10,8 @@ from colander import * # re-export
 
 from routr.exc import InvalidRoutePattern, NoURLPatternMatched
 
-__all__ = ("QueryParams", "Optional")
+__all__ = (
+    "RequestParams", "FormParams", "QueryParams", "Optional", "qs", "form")
 
 _none = object()
 
@@ -24,7 +25,7 @@ class Optional(object):
         self.typ = typ
         self.default = default
 
-class QueryParams(object):
+class RequestParams(object):
     """ Guard for query string parameters
 
     Raises :class:`webob.exc.HTTPBadRequest` if query string isn't validated.
@@ -32,6 +33,9 @@ class QueryParams(object):
     :param kwargs:
         mapping with validators for query string
     """
+
+    def params(self, request):
+        return request.GET
 
     def __init__(self, **kwargs):
         self.schema = SchemaNode(Mapping())
@@ -48,7 +52,7 @@ class QueryParams(object):
 
     def __call__(self, request, trace):
         try:
-            kwargs = self.schema.deserialize(request.GET)
+            kwargs = self.schema.deserialize(self.params(request))
         except Invalid, e:
             raise exc.HTTPBadRequest(e)
         for k, v in kwargs.items():
@@ -66,3 +70,16 @@ class QueryParams(object):
         r = QueryParams()
         r.schema = s
         return r
+
+class QueryParams(RequestParams):
+
+    def params(self, request):
+        return request.GET
+
+class FormParams(RequestParams):
+
+    def params(self, request):
+        return request.POST
+
+qs = QueryParams
+form = FormParams
