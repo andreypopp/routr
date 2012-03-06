@@ -17,7 +17,7 @@ from routr.exc import (
     RouteReversalError)
 
 __all__ = (
-    "route", "include", "plug", "Trace",
+    "Configuration", "route", "include", "plug", "Trace",
     "Route", "Endpoint", "RootEndpoint", "RouteGroup",
     "GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "TRACE", "PATCH")
 
@@ -31,96 +31,6 @@ TRACE = "TRACE"
 PATCH = "PATCH"
 
 _http_methods = set([GET, POST, PUT, DELETE, HEAD, OPTIONS, TRACE])
-
-def include(spec):
-    """ Include routes by ``spec``
-
-    :param spec:
-        asset specification which points to :class:`.Route` instance
-    """
-    r = import_string(spec)
-    if not isinstance(r, Route):
-        raise RouteConfigurationError(
-            "route included by '%s' isn't a route" % spec)
-    return r
-
-def plug(name):
-    """ Plug routes by ``setuptools`` entry points, identified by ``name``
-
-    :param name:
-        entry point name to query routes
-    """
-    routes = []
-    for p in iter_entry_points("routr", name=name):
-        r = p.load()
-        if not isinstance(r, Route):
-            raise RouteConfigurationError(
-                "entry point '%s' doesn't point at Route instance" % p)
-        routes.append(r)
-    return RouteGroup(routes, [])
-
-def route(*directives, **kwargs):
-    """ Directive for configuring routes in application
-
-    :param directives:
-        ([method,] [pattern,] target) produces endpoint route
-        ([method,] [pattern,] *routes) produces route group
-    :param kwargs:
-        name and guards are treated as name and guards for routes, other keyword
-        args a are passed as annotations
-    """
-    directives = list(directives)
-    if not directives:
-        raise RouteConfigurationError()
-
-    if not directives:
-        raise RouteConfigurationError()
-
-    method = directives.pop(0) if directives[0] in _http_methods else None
-
-    if not directives:
-        raise RouteConfigurationError()
-
-    name = kwargs.pop("name", None)
-    guards = kwargs.pop("guards", [])
-
-    if not isinstance(guards, (list, tuple)):
-        guards = [guards]
-
-    # root directive
-    if len(directives) == 1 and not isinstance(directives[0], Route):
-        target = directives[0]
-        return RootEndpoint(target, method or GET, name, guards, **kwargs)
-
-    # endpoint directive
-    elif (len(directives) == 2
-            and isinstance(directives[0], str)
-            and not isinstance(directives[1], Route)):
-        pattern, target = directives
-        return Endpoint(
-            target, method or GET, name, guards, pattern, **kwargs)
-
-    # route list with pattern
-    elif (len(directives) > 1
-            and isinstance(directives[0], str)
-            and all(isinstance(d, Route) for d in directives[1:])):
-        pattern, routes = directives[0], directives[1:]
-        if method:
-            raise RouteConfigurationError(
-                "'method' doesn't make sense for route groups")
-        return RouteGroup(routes, guards, pattern, **kwargs)
-
-    # route list
-    elif all(isinstance(d, Route) for d in directives):
-        if method:
-            raise RouteConfigurationError(
-                "'method' doesn't make sense for route groups")
-        return RouteGroup(directives, guards, None, **kwargs)
-
-    # error here
-    else:
-        # TODO: expand on this
-        raise RouteConfigurationError("improper usage of 'route' directive")
 
 class Trace(object):
     """ A result of routes matching
@@ -532,3 +442,103 @@ class URLPattern(object):
 
     def __repr__(self):
         return "<routr.URLPattern %s>" % self.pattern
+
+def include(spec):
+    """ Include routes by ``spec``
+
+    :param spec:
+        asset specification which points to :class:`.Route` instance
+    """
+    r = import_string(spec)
+    if not isinstance(r, Route):
+        raise RouteConfigurationError(
+            "route included by '%s' isn't a route" % spec)
+    return r
+
+def plug(name):
+    """ Plug routes by ``setuptools`` entry points, identified by ``name``
+
+    :param name:
+        entry point name to query routes
+    """
+    routes = []
+    for p in iter_entry_points("routr", name=name):
+        r = p.load()
+        if not isinstance(r, Route):
+            raise RouteConfigurationError(
+                "entry point '%s' doesn't point at Route instance" % p)
+        routes.append(r)
+    return RouteGroup(routes, [])
+
+class Configuration(object):
+    """ Object which holds configuration for route definition DSL"""
+
+    root = RootEndpoint
+    endpoint = Endpoint
+    group = RouteGroup
+
+    def route(self, *directives, **kwargs):
+        """ Directive for configuring routes in application
+
+        :param directives:
+            ([method,] [pattern,] target) produces endpoint route
+            ([method,] [pattern,] *routes) produces route group
+        :param kwargs:
+            name and guards are treated as name and guards for routes, other
+            keyword args a are passed as annotations
+        """
+        directives = list(directives)
+        if not directives:
+            raise RouteConfigurationError()
+
+        if not directives:
+            raise RouteConfigurationError()
+
+        method = directives.pop(0) if directives[0] in _http_methods else None
+
+        if not directives:
+            raise RouteConfigurationError()
+
+        name = kwargs.pop("name", None)
+        guards = kwargs.pop("guards", [])
+
+        if not isinstance(guards, (list, tuple)):
+            guards = [guards]
+
+        # root directive
+        if len(directives) == 1 and not isinstance(directives[0], Route):
+            target = directives[0]
+            return self.root(target, method or GET, name, guards, **kwargs)
+
+        # endpoint directive
+        elif (len(directives) == 2
+                and isinstance(directives[0], str)
+                and not isinstance(directives[1], Route)):
+            pattern, target = directives
+            return self.endpoint(
+                target, method or GET, name, guards, pattern, **kwargs)
+
+        # route list with pattern
+        elif (len(directives) > 1
+                and isinstance(directives[0], str)
+                and all(isinstance(d, Route) for d in directives[1:])):
+            pattern, routes = directives[0], directives[1:]
+            if method:
+                raise RouteConfigurationError(
+                    "'method' doesn't make sense for route groups")
+            return self.group(routes, guards, pattern, **kwargs)
+
+        # route list
+        elif all(isinstance(d, Route) for d in directives):
+            if method:
+                raise RouteConfigurationError(
+                    "'method' doesn't make sense for route groups")
+            return self.group(directives, guards, None, **kwargs)
+
+        # error here
+        else:
+            # TODO: expand on this
+            raise RouteConfigurationError("improper usage of 'route' directive")
+
+config = Configuration()
+route = config.route
