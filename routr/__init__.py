@@ -286,10 +286,9 @@ class RouteGroup(Route):
                     if subtrace is not None and trace is not None
                     else trace or subtrace)
         if guarded:
-            # NOTE
-            #   we raise now only first guard falure
-            #   this is the place we might want more
-            raise RouteGuarded(guarded[0])
+            # NOTE we raise only last guard failure
+            # cause it's more interesting one
+            raise RouteGuarded(guarded[-1])
         raise NoURLPatternMatched()
 
     def __iter__(self):
