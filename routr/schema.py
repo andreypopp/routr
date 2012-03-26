@@ -35,7 +35,7 @@ class RequestParams(object):
     """
 
     def params(self, request):
-        return request.GET
+        raise NotImplementedError()
 
     def __init__(self, **kwargs):
         self.schema = SchemaNode(Mapping())
