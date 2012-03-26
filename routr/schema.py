@@ -34,11 +34,9 @@ class RequestParams(object):
         mapping with validators for query string
     """
 
-    def params(self, request):
-        raise NotImplementedError()
-
     def __init__(self, **kwargs):
         self.schema = SchemaNode(Mapping())
+        self.post_processor = None
         for name, typ in kwargs.items():
             if isinstance(typ, Optional):
                 self.schema.add(SchemaNode(
@@ -50,6 +48,13 @@ class RequestParams(object):
                     typ = typ()
                 self.schema.add(SchemaNode(typ, name=name))
 
+    def params(self, request):
+        raise NotImplementedError()
+
+    def then(self, post_processor):
+        self.post_processor = post_processor
+        return self
+
     def __call__(self, request, trace):
         try:
             kwargs = self.schema.deserialize(self.params(request))
@@ -58,6 +63,8 @@ class RequestParams(object):
         for k, v in kwargs.items():
             if v is Optional.none:
                 kwargs.pop(k)
+        if self.post_processor:
+            kwargs = self.post_processor(kwargs)
         trace.kwargs.update(kwargs)
         return trace
 
