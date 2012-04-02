@@ -11,7 +11,8 @@ from colander import * # re-export
 from routr.exc import InvalidRoutePattern, NoURLPatternMatched
 
 __all__ = (
-    "RequestParams", "FormParams", "QueryParams", "Optional", "qs", "form")
+    "RequestParams", "FormParams", "QueryParams", "Optional",
+    "opt", "qs", "form")
 
 _none = object()
 
@@ -90,3 +91,4 @@ class FormParams(RequestParams):
 
 qs = QueryParams
 form = FormParams
+opt = Optional
