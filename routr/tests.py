@@ -8,7 +8,7 @@
 from unittest import TestCase
 from webob import Request, exc
 
-from routr.schema import QueryParams, String, Int, Optional
+from routr.schema import String, Int, opt, qs
 from routr import Route, Endpoint, RootEndpoint, RouteGroup, URLPattern
 from routr import route, RouteConfigurationError
 from routr import POST, GET
@@ -143,7 +143,7 @@ class TestEndpoint(TestRouting):
     def test_param_guard(self):
         r = route(
             "/news/{id:int}/", "target",
-            guards=QueryParams(q=Optional(String), page=Optional(Int)))
+            guards=qs(q=opt(String), page=opt(Int)))
 
         req = Request.blank("/news/42/")
         tr = r(req)
