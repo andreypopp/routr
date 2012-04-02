@@ -36,12 +36,12 @@ better than words here::
   from myapp.views import get_comments, create_comment
 
   routes = route("news",
-    route(GET,  "/",                  list_news),
-    route(POST, "/",                  create_news),
-    route(GET,  "/{id:int}/",         get_news),
-    route(GET,  "/{id:int}/comments", get_comments),
-    route(POST, "/{id:int}/comments", create_comment),
-    )
+      route(GET,  "/",                  list_news),
+      route(POST, "/",                  create_news),
+      route(GET,  "/{id:int}/",         get_news),
+      route(GET,  "/{id:int}/comments", get_comments),
+      route(POST, "/{id:int}/comments", create_comment),
+      )
 
 You use :func:`routr.route` function to define your routes, then you can
 dispatch request against them::
@@ -50,17 +50,17 @@ dispatch request against them::
   from webob import Request, exc
 
   def application(environ, start_response):
-    request = Request(environ)
-    try:
-      trace = routes(request)
-      view = trace.target
-      args, kwargs = trace.args, trace.kwargs
-      response = view(*args, **kwargs)
-    except NoMatchFound, e:
-      response = e.response
-    except exc.HTTPException, e:
-      response = e
-    return response(environ, start_response)
+      request = Request(environ)
+      try:
+          trace = routes(request)
+          view = trace.target
+          args, kwargs = trace.args, trace.kwargs
+          response = view(*args, **kwargs)
+      except NoMatchFound, e:
+          response = e.response
+      except exc.HTTPException, e:
+          response = e
+      return response(environ, start_response)
 
 Note that neither of these are not dictating you how to build your application
 -- you're completely free about how to structure and organize your application's
@@ -114,13 +114,13 @@ Matching query string
 ---------------------
 
 You can match against query string parameters with :mod:`routr.schema` module
-which exposes :class:`routr.schema.QueryParams` guard::
+which exposes :class:`routr.schema.QueryParams` (or its ``qs`` alias) guard::
 
   from routr import route
-  from routr.schema import QueryParams, Int, Optional, String
+  from routr.schema import qs, opt, Int, String
 
   routes = route("/", myview,
-      guards=[QueryParams(query=String, page=Optional(Int))])
+      guards=[qs(query=String, page=opt(Int))])
 
 Class :class:`routr.schema.QueryParams` represents a guard which processes
 request's query string and validates it against predefined schema.
