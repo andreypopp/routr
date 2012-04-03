@@ -1,12 +1,13 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = "0.1"
+version = "0.1.1"
 
 setup(
     name="routr",
     version=version,
     description="URL routing made right",
+    long_description=open("README").read() + "\n\n" + open("CHANGES").read(),
     author="Andrey Popp",
     author_email="8mayday@gmail.com",
     license="BSD",

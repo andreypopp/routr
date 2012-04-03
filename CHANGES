@@ -1,0 +1,13 @@
+0.1.1
+-----
+
+* allow guards return None (routing doesn't break on this and procees with old
+  trace)
+
+* RequestParams now can accept colander.SchemaNode directly (allows to supply
+  validators)
+
+0.1
+---
+
+* initial release
