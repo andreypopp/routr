@@ -39,6 +39,11 @@ class RequestParams(object):
         self.schema = SchemaNode(Mapping())
         self.post_processor = None
         for name, typ in kwargs.items():
+            if isinstance(typ, SchemaNode):
+                typ = typ.clone()
+                typ.name = name
+                self.schema.add(typ)
+                continue
             if isinstance(typ, Optional):
                 self.schema.add(SchemaNode(
                     typ.typ,
