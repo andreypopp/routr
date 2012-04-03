@@ -107,7 +107,7 @@ class Route(object):
 
     def match_guards(self, request, trace):
         for guard in self.guards:
-            trace = guard(request, trace)
+            trace = guard(request, trace) or trace
         return trace
 
     def __call__(self, request):
