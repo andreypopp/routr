@@ -33,7 +33,9 @@ PATCH = "PATCH"
 _http_methods = set([GET, POST, PUT, DELETE, HEAD, OPTIONS, TRACE])
 
 class Trace(object):
-    """ A result of routes matching
+    """ Result of route matching
+
+    Represents a trace of matched routes towards the last one called endpoint.
 
     :attr args:
         collected positional arguments
@@ -82,6 +84,8 @@ class Trace(object):
 class Route(object):
     """ Base class for routes
 
+    :param cfg:
+        configuration object
     :param guards:
         a list of guards
     :param pattern:
@@ -102,11 +106,15 @@ class Route(object):
         return URLPattern(pattern)
 
     def match_pattern(self, path_info):
+        """ Match ``path_info`` against route's ``pattern``"""
         if self.pattern is None:
             return path_info, ()
         return self.pattern.match(path_info)
 
     def match_guards(self, request, trace):
+        """ Match ``request`` against route's ``guards`` and accumulate result
+        in ``trace``
+        """
         for guard in self.guards:
             trace = guard(request, trace) or trace
         return trace
@@ -126,8 +134,8 @@ class Route(object):
     def match(self, request):
         """ Match ``request`` against route
 
-        Returns route target and collected ``*args`` and ``**kwargs``.
-
+        return:
+            trace object which accumulate ``*args`` and ``**kwargs``
         :rtype:
             :class:`.Trace`
 
