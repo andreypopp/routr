@@ -1,3 +1,8 @@
+0.1.3
+-----
+
+* fix broken 0.1.2 release by including CHANGES file in dist
+
 0.1.2
 -----
 
