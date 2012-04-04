@@ -1,11 +1,13 @@
 0.1.2 (unreleased)
 ------------------
 
-* routes now have access to configuration object via ``cfg`` attribute
+* trace factory made configurable via Configuration.trace attribute
 
 * method and PATH_INFO extraction delegated to configuration, allows
   implementing routing for other request wrapper (werkzeug or django's request
   for example)
+
+* routes now have access to configuration object via ``cfg`` attribute
 
 0.1.1
 -----

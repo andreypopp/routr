@@ -69,7 +69,7 @@ class Trace(object):
         routes.extend(tr.routes)
         payload = dict(self.payload)
         payload.update(tr.payload)
-        return Trace(args, kwargs, routes, payload)
+        return self.__class__(args, kwargs, routes, payload)
 
     def __setattr__(self, name, value):
         self.payload[name] = value
@@ -184,7 +184,7 @@ class Endpoint(Route):
         if path_info:
             raise NoURLPatternMatched()
         self.match_method(request)
-        trace = Trace(args, {}, [self])
+        trace = self.cfg.trace(args, {}, [self])
         trace = self.match_guards(request, trace)
         return trace
 
@@ -269,7 +269,7 @@ class RouteGroup(Route):
     def match(self, path_info, request):
         path_info, args = self.match_pattern(path_info)
         guarded = []
-        trace = Trace(args, {}, [self])
+        trace = self.cfg.trace(args, {}, [self])
         trace = self.match_guards(request, trace)
         for route in self.routes:
             try:
@@ -481,6 +481,7 @@ class Configuration(object):
     root = RootEndpoint
     endpoint = Endpoint
     group = RouteGroup
+    trace = Trace
 
     def extract_method(self, request):
         """ Extract method of the ``request``"""
