@@ -88,7 +88,8 @@ class Route(object):
         pattern for URL pattern
     """
 
-    def __init__(self, guards, pattern, **annotations):
+    def __init__(self, cfg, guards, pattern, **annotations):
+        self.cfg = cfg
         self.guards = guards
         self.pattern = self.compile_pattern(pattern)
         self.annotations = annotations
@@ -119,7 +120,7 @@ class Route(object):
         :param request:
             :class:`webob.Request` object to match route against
         """
-        path_info = request.path_info
+        path_info = self.cfg.extract_path_info(request)
         return self.match(path_info, request)
 
     def match(self, request):
@@ -168,14 +169,14 @@ class Endpoint(Route):
         otherwise ``None`` is allowed
     """
 
-    def __init__(self, target, method, name, guards, pattern, **annotations):
-        super(Endpoint, self).__init__(guards, pattern, **annotations)
+    def __init__(self, target, method, name, cfg, guards, pattern, **annotations):
+        super(Endpoint, self).__init__(cfg, guards, pattern, **annotations)
         self.target = target
         self.method = method
         self.name = name
 
     def match_method(self, request):
-        if self.method != request.method:
+        if self.method != self.cfg.extract_method(request):
             raise MethodNotAllowed()
 
     def match(self, path_info, request):
@@ -208,9 +209,9 @@ class Endpoint(Route):
 class RootEndpoint(Endpoint):
     """ Endpoint route with no pattern"""
 
-    def __init__(self, target, method, name, guards, **annotations):
+    def __init__(self, target, method, name, cfg, guards, **annotations):
         super(RootEndpoint, self).__init__(
-            target, method, name, guards, None, **annotations)
+            target, method, name, cfg, guards, None, **annotations)
 
     def match_pattern(self, path_info):
         if not path_info or path_info == "/":
@@ -228,8 +229,8 @@ class RouteGroup(Route):
         a list of :class:`Route` objects
     """
 
-    def __init__(self, routes, guards, pattern, **annotations):
-        super(RouteGroup, self).__init__(guards, pattern, **annotations)
+    def __init__(self, routes, cfg, guards, pattern, **annotations):
+        super(RouteGroup, self).__init__(cfg, guards, pattern, **annotations)
         self.routes = routes
 
     def index(self):
@@ -481,6 +482,14 @@ class Configuration(object):
     endpoint = Endpoint
     group = RouteGroup
 
+    def extract_method(self, request):
+        """ Extract method of the ``request``"""
+        return request.method
+
+    def extract_path_info(self, request):
+        """ Extract PATH_INFO of the ``request``"""
+        return request.path_info
+
     def route(self, *directives, **kwargs):
         """ Directive for configuring routes in application
 
@@ -512,7 +521,7 @@ class Configuration(object):
         # root directive
         if len(directives) == 1 and not isinstance(directives[0], Route):
             target = directives[0]
-            return self.root(target, method or GET, name, guards, **kwargs)
+            return self.root(target, method or GET, name, self, guards, **kwargs)
 
         # endpoint directive
         elif (len(directives) == 2
@@ -520,7 +529,7 @@ class Configuration(object):
                 and not isinstance(directives[1], Route)):
             pattern, target = directives
             return self.endpoint(
-                target, method or GET, name, guards, pattern, **kwargs)
+                target, method or GET, name, self, guards, pattern, **kwargs)
 
         # route list with pattern
         elif (len(directives) > 1
@@ -530,14 +539,14 @@ class Configuration(object):
             if method:
                 raise RouteConfigurationError(
                     "'method' doesn't make sense for route groups")
-            return self.group(routes, guards, pattern, **kwargs)
+            return self.group(routes, self, guards, pattern, **kwargs)
 
         # route list
         elif all(isinstance(d, Route) for d in directives):
             if method:
                 raise RouteConfigurationError(
                     "'method' doesn't make sense for route groups")
-            return self.group(directives, guards, None, **kwargs)
+            return self.group(directives, self, guards, None, **kwargs)
 
         # error here
         else:
