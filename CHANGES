@@ -1,3 +1,11 @@
+0.1.4
+-----
+
+* RequestParams.post_processor now also can be accumulated via addition
+
+* fix bug in RequestParams which prevented Option wrap SchemaNode objects
+  directly
+
 0.1.3
 -----
 
