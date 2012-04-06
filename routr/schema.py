@@ -90,6 +90,15 @@ class RequestParams(object):
             s.add(c)
         r = QueryParams()
         r.schema = s
+        if self.post_processor or o.post_processor:
+            def post_processor(kwargs):
+                ret_kwargs = {}
+                if self.post_processor:
+                    ret_kwargs.update(self.post_processor(kwargs))
+                if o.post_processor:
+                    ret_kwargs.update(o.post_processor(kwargs))
+                return ret_kwargs
+            r.post_processor = post_processor
         return r
 
 class QueryParams(RequestParams):
