@@ -45,10 +45,18 @@ class RequestParams(object):
                 self.schema.add(typ)
                 continue
             if isinstance(typ, Optional):
-                self.schema.add(SchemaNode(
-                    typ.typ,
-                    name=name,
-                    missing=typ.default))
+                missing = typ.default
+                typ = typ.typ
+                if isinstance(typ, SchemaNode):
+                    typ = typ.clone()
+                    typ.name = name
+                    typ.missing = missing
+                    self.schema.add(typ)
+                else:
+                    self.schema.add(SchemaNode(
+                        typ,
+                        name=name,
+                        missing=missing))
             else:
                 if isinstance(typ, type):
                     typ = typ()
