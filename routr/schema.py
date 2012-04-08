@@ -35,6 +35,8 @@ class RequestParams(object):
         mapping with validators for query string
     """
 
+    exception_factory = exc.HTTPBadRequest
+
     def __init__(self, **kwargs):
         self.schema = SchemaNode(Mapping())
         self.post_processor = None
@@ -73,7 +75,7 @@ class RequestParams(object):
         try:
             kwargs = self.schema.deserialize(self.params(request))
         except Invalid, e:
-            raise exc.HTTPBadRequest(e)
+            raise self.exception_factory(e)
         for k, v in kwargs.items():
             if v is Optional.none:
                 kwargs.pop(k)
