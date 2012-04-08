@@ -1,3 +1,9 @@
+0.1.5 (unreleased)
+------------------
+
+  * introduced RequestParams.exception_factory which abstracts away
+    HTTPBadRequest raise in case of invalid data being supplied
+
 0.1.4
 -----
 
