@@ -1,6 +1,15 @@
 routr -- lightweight request routing for WebOb
 ==============================================
 
-Docs[1] are hosted at excellent ReadTheDocs project.
+Just a small example::
 
-[1]: http://routr.readthedocs.org/
+  from routr import route, GET, POST
+  from routr.schema import form, String
+
+  routes = route("/users",
+    route(POST, "/",          "views.create_user", guards=[form(username=String)]),
+    route(GET,  "/{id:int}",  "views.get_user"))
+
+Docs_ are hosted at excellent readthedocs project.
+
+.. _docs: http://routr.readthedocs.org/
