@@ -1,11 +1,11 @@
 0.1.5
 -----
 
-  * introduced RequestParams.exception_factory which abstracts away
-    HTTPBadRequest raise in case of invalid data being supplied
+* introduced RequestParams.exception_factory which abstracts away
+  HTTPBadRequest raise in case of invalid data being supplied
 
-  * [bugfix] RouteGuarded.response now installed correctly, previously it
-    sometimes contained NoUrlMatched objects which are not responses
+* [bugfix] RouteGuarded.response now installed correctly, previously it
+  sometimes contained NoUrlMatched objects which are not responses
 
 0.1.4
 -----
