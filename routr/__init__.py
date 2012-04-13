@@ -285,10 +285,10 @@ class RouteGroup(Route):
             except NoURLPatternMatched:
                 continue
             except MethodNotAllowed, e:
-                guarded.append(e)
+                guarded.append(RouteGuarded(e, e.response))
                 continue
             except HTTPException, e:
-                guarded.append(e)
+                guarded.append(RouteGuarded(e, e))
                 continue
             else:
                 return ((trace + subtrace)
@@ -297,7 +297,7 @@ class RouteGroup(Route):
         if guarded:
             # NOTE we raise only last guard failure
             # cause it's more interesting one
-            raise RouteGuarded(guarded[-1])
+            raise guarded[-1]
         raise NoURLPatternMatched()
 
     def __iter__(self):

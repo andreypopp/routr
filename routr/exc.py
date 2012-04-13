@@ -35,7 +35,8 @@ class RouteGuarded(NoMatchFound):
         :class:``webob.exc.HTTPException``
     """
 
-    def __init__(self, response):
+    def __init__(self, reason, response):
+        self.reason = reason
         self.response = response
 
 class MethodNotAllowed(NoMatchFound):
