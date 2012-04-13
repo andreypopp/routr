@@ -287,6 +287,9 @@ class RouteGroup(Route):
             except MethodNotAllowed, e:
                 guarded.append(RouteGuarded(e, e.response))
                 continue
+            except RouteGuarded, e:
+                guarded.append(e)
+                continue
             except HTTPException, e:
                 guarded.append(RouteGuarded(e, e))
                 continue
