@@ -522,7 +522,7 @@ class Configuration(object):
         method = directives.pop(0) if directives[0] in _http_methods else None
 
         if not directives:
-            raise RouteConfigurationError()
+            raise RouteConfigurationError("empty routes")
 
         name = kwargs.pop("name", None)
         guards = kwargs.pop("guards", [])
