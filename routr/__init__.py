@@ -356,7 +356,7 @@ class URLPattern(object):
         (?P<label>[a-z]+)            # label
         (:(?P<type>[a-z]+))?         # optional type identifier
         (\(                          # optional args
-            (?P<args>[a-z= ,]*)
+            (?P<args>[a-z= ,_]*)
         \))?
         }""", re.VERBOSE)
 
