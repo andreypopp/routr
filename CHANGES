@@ -3,6 +3,8 @@ next release
 
 * [bugfix] fix bug with RouteGuarded poped up in RouteGroup match
 
+* add '_' to allowed args in URLPattern
+
 0.1.5
 -----
 
