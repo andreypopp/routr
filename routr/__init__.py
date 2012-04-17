@@ -356,7 +356,7 @@ class URLPattern(object):
         (?P<label>[a-z]+)            # label
         (:(?P<type>[a-z]+))?         # optional type identifier
         (\(                          # optional args
-            (?P<args>[a-z= ,_]*)
+            (?P<args>[a-zA-Z= ,_]*)
         \))?
         }""", re.VERBOSE)
 
@@ -420,7 +420,7 @@ class URLPattern(object):
 
         r = self.pattern
         for arg in args:
-            r = self._type_re.sub(str(arg), self.pattern, 1)
+            r = self._type_re.sub(str(arg), r, 1)
         if self._type_re.search(r):
             raise RouteReversalError(
                 "not enough params for reversal of '%s' route,"

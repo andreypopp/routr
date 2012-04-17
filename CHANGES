@@ -1,3 +1,8 @@
+0.1.7
+-----
+
+* [bugfix] incorrect reversal of urls with more than one param
+
 0.1.6
 -----
 
