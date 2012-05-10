@@ -1,3 +1,20 @@
+no-guards proposal
+------------------
+
+Fix DSL grammar no to include special treatment for guards keywords, guards
+should be declared inplace:
+
+    routes = route(
+      route(GET, "/url", qs(name=String), auth_required, endpoint),
+      ...
+      )
+
+grammar:
+
+    route([method], [uri pattern], [guard [, guard [, ...]]], endpoint, **kw)
+
+    route([method], [route [, route [, ...]]], [guard [, guard [, ...]]], **kw)
+
 important
 ---------
 
