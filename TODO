@@ -1,6 +1,10 @@
 important
 ---------
 
+  * combine HTTP methods with |
+
+    route(GET | POST, "/uri", ...)
+
   * add support for routr.schema.QueryParams
 
   * improve test suite
