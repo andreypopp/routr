@@ -42,7 +42,7 @@ class RouteGuarded(NoMatchFound):
 class MethodNotAllowed(NoMatchFound):
     """ Raised when request was matched but request method isn't allowed"""
 
-    response = exc.HTTPMethodNotAllowed
+    response = exc.HTTPMethodNotAllowed()
 
 class RouteConfigurationError(Exception):
     """ Routes were configured improperly
