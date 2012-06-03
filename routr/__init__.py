@@ -19,7 +19,8 @@ from routr.exc import (
 __all__ = (
     "Configuration", "route", "include", "plug", "Trace",
     "Route", "Endpoint", "RootEndpoint", "RouteGroup", "HTTPMethod",
-    "GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "TRACE", "PATCH")
+    "GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "TRACE", "PATCH",
+    "NoMatchFound", "RouteConfigurationError")
 
 class HTTPMethod(str):
     """ HTTP method"""
@@ -134,7 +135,7 @@ class Route(object):
         path_info = self.cfg.extract_path_info(request)
         return self.match(path_info, request)
 
-    def match(self, request):
+    def match(self, path_info, request):
         """ Match ``request`` against route
 
         return:
@@ -180,7 +181,8 @@ class Endpoint(Route):
         otherwise ``None`` is allowed
     """
 
-    def __init__(self, target, method, name, cfg, guards, pattern, **annotations):
+    def __init__(self, target, method, name, cfg, guards, pattern,
+            **annotations):
         super(Endpoint, self).__init__(cfg, guards, pattern, **annotations)
         self.target = target
         self.method = method
@@ -276,9 +278,9 @@ class RouteGroup(Route):
         guarded = []
         trace = self.cfg.trace(args, {}, [self])
         trace = self.match_guards(request, trace)
-        for route in self.routes:
+        for subroute in self.routes:
             try:
-                subtrace = route.match(path_info, request)
+                subtrace = subroute.match(path_info, request)
             except NoURLPatternMatched:
                 continue
             except MethodNotAllowed, e:
@@ -537,7 +539,8 @@ class Configuration(object):
                 and isinstance(args[0], str)
                 and not isinstance(args[1], Route)):
             pattern, target = args
-            return self.endpoint(target, method, name, self, [], pattern, **kwargs)
+            return self.endpoint(target, method, name, self, [], pattern,
+                    **kwargs)
 
         else:
             if isinstance(args[0], str):
@@ -555,9 +558,11 @@ class Configuration(object):
                 return self.group(routes, self, guards, pattern, **kwargs)
             elif len(args) == 1:
                 target = args[0]
-                return self.endpoint(target, method, name, self, guards, pattern, **kwargs)
+                return self.endpoint(target, method, name, self, guards,
+                        pattern, **kwargs)
             else:
-                raise RouteConfigurationError("improper usage of 'route' directive")
+                raise RouteConfigurationError(
+                    "improper usage of 'route' directive")
 
 config = Configuration()
 route = config.route
