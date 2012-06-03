@@ -6,9 +6,7 @@
 """
 
 from webob import exc
-from colander import * # re-export
-
-from routr.exc import InvalidRoutePattern, NoURLPatternMatched
+from colander import * # pylint: disable=W0401,W0614,W0622
 
 __all__ = (
     "RequestParams", "FormParams", "QueryParams", "Optional",
