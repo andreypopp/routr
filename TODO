@@ -1,48 +1,11 @@
-no-guards proposal
-------------------
-
-Fix DSL grammar no to include special treatment for guards keywords, guards
-should be declared inplace:
-
-    routes = route(
-      route(GET, "/url", qs(name=String), auth_required, endpoint),
-      ...
-      )
-
-grammar:
-
-    route([method], [uri pattern], [guard [, guard [, ...]]], endpoint, **kw)
-
-    route([method], [uri pattern], [guard [, guard [, ...]]], [route [, route [, ...]]], **kw)
-
 important
 ---------
 
-  * combine HTTP methods with |
-
-    route(GET | POST, "/uri", ...)
-
-  * add support for routr.schema.QueryParams
+  * add support for routr.schema.QueryParams doc generation
 
   * improve test suite
 
   * more explanatory error messages
-
-  * add docs!
-
-  * URLPattern placeholders to be optionally labeled
-
-    see as an example
-
-      /api/news/{id:int}/
-
-    that should only be rendered by .. autoroutr as
-
-      /api/news/{id}/
-
-    but should be functionally equivalent to
-
-      /api/news/{int}/
 
 less important
 --------------
