@@ -9,7 +9,7 @@ from unittest import TestCase
 from webob import Request, exc
 
 from routr.schema import String, Int, opt, qs
-from routr import Route, Endpoint, RootEndpoint, RouteGroup, URLPattern
+from routr import Route, Endpoint, RouteGroup, URLPattern
 from routr import route, RouteConfigurationError
 from routr import POST, GET
 from routr.exc import (
@@ -147,8 +147,9 @@ class TestEndpoint(TestRouting):
 
     def test_param_guard(self):
         r = route(
-            "/news/{id:int}/", "target",
-            guards=qs(q=opt(String), page=opt(Int)))
+            "/news/{id:int}/",
+            qs(q=opt(String), page=opt(Int)),
+            "target")
 
         req = Request.blank("/news/42/")
         tr = r(req)
@@ -222,6 +223,7 @@ class TestRouteGroup(TestRouting):
         r = route("news",
                 route("{id:int}",
                     route("comments", "view")))
+        print r
         req = Request.blank("/news/42/comments")
         tr = r(req)
         self.assertEqual(
@@ -342,7 +344,7 @@ class TestRouteDirective(TestCase):
         r = route("myapp.mytarget")
         self.assertEqual(r.pattern, None)
         self.assertEqual(r.guards, [])
-        self.assertIsInstance(r, RootEndpoint)
+        self.assertIsInstance(r, Endpoint)
         self.assertEqual(r.target, "myapp.mytarget")
 
     def test_root_endpoint_func(self):
@@ -351,13 +353,13 @@ class TestRouteDirective(TestCase):
         r = route(target)
         self.assertEqual(r.pattern, None)
         self.assertEqual(r.guards, [])
-        self.assertIsInstance(r, RootEndpoint)
+        self.assertIsInstance(r, Endpoint)
         self.assertEqual(r.target, target)
 
     def test_root_endpoint_guards(self):
-        r = route("myapp.mytarget", guards=["guard"])
+        r = route(id, "myapp.mytarget")
         self.assertEqual(r.pattern, None)
-        self.assertEqual(r.guards, ["guard"])
+        self.assertEqual(r.guards, [id])
         self.assertIsInstance(r, Endpoint)
         self.assertEqual(r.target, "myapp.mytarget")
 
@@ -378,9 +380,9 @@ class TestRouteDirective(TestCase):
         self.assertEqual(r.target, target)
 
     def test_endpoint_guards(self):
-        r = route("news", "myapp.mytarget", guards=["guard"])
+        r = route("news", id, "myapp.mytarget")
         self.assertNotEqual(r.pattern, None)
-        self.assertEqual(r.guards, ["guard"])
+        self.assertEqual(r.guards, [id])
         self.assertIsInstance(r, Endpoint)
         self.assertEqual(r.target, "myapp.mytarget")
 
@@ -394,10 +396,10 @@ class TestRouteDirective(TestCase):
 
     def test_route_list_no_pattern_guards(self):
         r = route(
+            id,
             route("news", "myapp.api.news"),
-            route("comments", "myapp.api.comments"),
-            guards=["guard"])
-        self.assertEqual(r.guards, ["guard"])
+            route("comments", "myapp.api.comments"))
+        self.assertEqual(r.guards, [id])
         self.assertEqual(r.pattern, None)
         self.assertIsInstance(r, RouteGroup)
 
@@ -411,11 +413,11 @@ class TestRouteDirective(TestCase):
 
     def test_route_list_guards(self):
         r = route("api",
+            id,
             route("news", "myapp.api.news"),
-            route("comments", "myapp.api.comments"),
-            guards=["guard"])
+            route("comments", "myapp.api.comments"))
         self.assertNotEqual(r.pattern, None)
-        self.assertEqual(r.guards, ["guard"])
+        self.assertEqual(r.guards, [id])
         self.assertIsInstance(r, RouteGroup)
 
     def test_invalid_routes(self):

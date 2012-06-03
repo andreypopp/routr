@@ -18,19 +18,20 @@ from routr.exc import (
 
 __all__ = (
     "Configuration", "route", "include", "plug", "Trace",
-    "Route", "Endpoint", "RootEndpoint", "RouteGroup",
+    "Route", "Endpoint", "RootEndpoint", "RouteGroup", "HTTPMethod",
     "GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "TRACE", "PATCH")
 
-GET = "GET"
-POST = "POST"
-PUT = "PUT"
-DELETE = "DELETE"
-HEAD = "HEAD"
-OPTIONS = "OPTIONS"
-TRACE = "TRACE"
-PATCH = "PATCH"
+class HTTPMethod(str):
+    """ HTTP method"""
 
-_http_methods = set([GET, POST, PUT, DELETE, HEAD, OPTIONS, TRACE])
+GET     = HTTPMethod("GET")
+POST    = HTTPMethod("POST")
+PUT     = HTTPMethod("PUT")
+DELETE  = HTTPMethod("DELETE")
+HEAD    = HTTPMethod("HEAD")
+OPTIONS = HTTPMethod("OPTIONS")
+TRACE   = HTTPMethod("TRACE")
+PATCH   = HTTPMethod("PATCH")
 
 class Trace(object):
     """ Result of route matching
@@ -108,7 +109,9 @@ class Route(object):
     def match_pattern(self, path_info):
         """ Match ``path_info`` against route's ``pattern``"""
         if self.pattern is None:
-            return path_info, ()
+            if not path_info or path_info == "/":
+                return "", ()
+            raise NoURLPatternMatched()
         return self.pattern.match(path_info)
 
     def match_guards(self, request, trace):
@@ -214,18 +217,6 @@ class Endpoint(Route):
 
     __str__ = __repr__
 
-class RootEndpoint(Endpoint):
-    """ Endpoint route with no pattern"""
-
-    def __init__(self, target, method, name, cfg, guards, **annotations):
-        super(RootEndpoint, self).__init__(
-            target, method, name, cfg, guards, None, **annotations)
-
-    def match_pattern(self, path_info):
-        if not path_info or path_info == "/":
-            return "", ()
-        raise NoURLPatternMatched()
-
 class RouteGroup(Route):
     """ Route which represents a group of other routes
 
@@ -273,6 +264,12 @@ class RouteGroup(Route):
         if kwargs:
             url += "?" + urlencode(kwargs)
         return url
+
+    def match_pattern(self, path_info):
+        """ Match ``path_info`` against route's ``pattern``"""
+        if self.pattern is None:
+            return path_info, ()
+        return self.pattern.match(path_info)
 
     def match(self, path_info, request):
         path_info, args = self.match_pattern(path_info)
@@ -489,7 +486,6 @@ def plug(name):
 class Configuration(object):
     """ Object which holds configuration for route definition DSL"""
 
-    root = RootEndpoint
     endpoint = Endpoint
     group = RouteGroup
     trace = Trace
@@ -502,68 +498,66 @@ class Configuration(object):
         """ Extract PATH_INFO of the ``request``"""
         return request.path_info
 
-    def route(self, *directives, **kwargs):
+    def route(self, *args, **kwargs):
         """ Directive for configuring routes in application
 
-        :param directives:
+        :param args:
             ([method,] [pattern,] target) produces endpoint route
             ([method,] [pattern,] *routes) produces route group
         :param kwargs:
             name and guards are treated as name and guards for routes, other
             keyword args a are passed as annotations
         """
-        directives = list(directives)
-        if not directives:
-            raise RouteConfigurationError()
 
-        if not directives:
-            raise RouteConfigurationError()
+        def consume(pred):
+            r = []
+            while args:
+                if not pred(args[0]):
+                    break
+                r.append(args.pop(0))
+            return r, args
 
-        method = directives.pop(0) if directives[0] in _http_methods else None
+        args = list(args)
 
-        if not directives:
+        if not args:
             raise RouteConfigurationError("empty routes")
 
+        method = args.pop(0) if isinstance(args[0], HTTPMethod) else GET
         name = kwargs.pop("name", None)
-        guards = kwargs.pop("guards", [])
 
-        if not isinstance(guards, (list, tuple)):
-            guards = [guards]
+        if not args:
+            raise RouteConfigurationError("empty routes")
 
-        # root directive
-        if len(directives) == 1 and not isinstance(directives[0], Route):
-            target = directives[0]
-            return self.root(target, method or GET, name, self, guards, **kwargs)
+        if len(args) == 1 and not isinstance(args[0], Route):
+            target = args[0]
+            return self.endpoint(target, method, name, self, [], None, **kwargs)
 
-        # endpoint directive
-        elif (len(directives) == 2
-                and isinstance(directives[0], str)
-                and not isinstance(directives[1], Route)):
-            pattern, target = directives
-            return self.endpoint(
-                target, method or GET, name, self, guards, pattern, **kwargs)
+        elif (
+                len(args) == 2
+                and isinstance(args[0], str)
+                and not isinstance(args[1], Route)):
+            pattern, target = args
+            return self.endpoint(target, method, name, self, [], pattern, **kwargs)
 
-        # route list with pattern
-        elif (len(directives) > 1
-                and isinstance(directives[0], str)
-                and all(isinstance(d, Route) for d in directives[1:])):
-            pattern, routes = directives[0], directives[1:]
-            if method:
-                raise RouteConfigurationError(
-                    "'method' doesn't make sense for route groups")
-            return self.group(routes, self, guards, pattern, **kwargs)
-
-        # route list
-        elif all(isinstance(d, Route) for d in directives):
-            if method:
-                raise RouteConfigurationError(
-                    "'method' doesn't make sense for route groups")
-            return self.group(directives, self, guards, None, **kwargs)
-
-        # error here
         else:
-            # TODO: expand on this
-            raise RouteConfigurationError("improper usage of 'route' directive")
+            if isinstance(args[0], str):
+                pattern = args.pop(0)
+            else:
+                pattern = None
+
+            guards, args = consume(
+                lambda d: not isinstance(d, Route) and hasattr(d, "__call__"))
+
+            routes, args = consume(
+                lambda d: isinstance(d, Route))
+
+            if routes:
+                return self.group(routes, self, guards, pattern, **kwargs)
+            elif len(args) == 1:
+                target = args[0]
+                return self.endpoint(target, method, name, self, guards, pattern, **kwargs)
+            else:
+                raise RouteConfigurationError("improper usage of 'route' directive")
 
 config = Configuration()
 route = config.route

@@ -13,7 +13,7 @@ grammar:
 
     route([method], [uri pattern], [guard [, guard [, ...]]], endpoint, **kw)
 
-    route([method], [route [, route [, ...]]], [guard [, guard [, ...]]], **kw)
+    route([method], [uri pattern], [guard [, guard [, ...]]], [route [, route [, ...]]], **kw)
 
 important
 ---------
