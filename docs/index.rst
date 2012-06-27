@@ -3,27 +3,27 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-routr -- lightweight request routing for WebOb
-==============================================
+routr -- lightweight request routing for WSGI
+=============================================
 
-Routr provides a set of tools to map WebOb request to an artbitrary Python
-object. It was designed with following points in mind:
-
-* *Non-intrusiveness* -- there're no "frameworkish" things, just a mechanism to
-  map request to Python object. How to setup request processing is completely up
-  to you.
-
-* *Extensibility* -- routing mechanism designed to be extremely extendable, you
-  can define *guards* for your routes, provide *annotations* to them or even
-  replace parts of routing mechanism by your own implementations.
+Routr provides a set of tools to map WSGI (WebOb by default) request to an
+artbitrary Python object. It was designed with the following points in mind:
 
 * *Declarativeness* -- configuration process is designed to be declarative. That
   means routes are readable and easy to understand and follow. Routr also
   provides a way to automatically generate documentation from routes (via Sphinx
   extension).
 
+* *Extensibility* -- routing mechanism designed to be extremely extendable, you
+  can define *guards* for your routes, provide *annotations* to them or even
+  replace parts of routing mechanism by your own implementations.
+
 * *Composability* -- routes defined with routr are composable -- you can mix and
   match them to compose more sofisticated routing structures.
+
+* *Non-intrusiveness* -- there are no "frameworkish" things, just a mechanism to
+  map request to Python object. How to setup request processing is completely up
+  to you.
 
 Basic usage
 -----------
@@ -72,7 +72,7 @@ Defining routes
 As we've already seen routes are defined via :func:`routr.route` function which
 can be called in two ways, the first one is for defining endpoint routes::
 
-  route([method,] [pattern,] target, name=None, guards=None, **anotations)
+  route([method] [, pattern] [, *guards] [, target], name=None, **anotations)
 
 As you can see ``method`` and ``pattern`` are optional here, by default
 ``method`` will be set to ``GET`` and pattern to ``/``. Argument ``target`` is
@@ -81,14 +81,31 @@ be a view callable or string which specifies one.
 
 Second form is for grouping routes together::
 
-  route([method,] [pattern,] *routes, name=None, guards=None, **anotations)
+  route([method] [, pattern] [, *guards] [, *routes], name=None, **anotations)
 
-There's ``*routes`` var sized argument which can contain one or more route
-definitions via same :func:`routr.route` so you can nest routes one inside
-others.
+There is ``*routes`` argument which can contain one or more route definitions
+via same :func:`routr.route` so you can nest routes one inside others.
 
 URL patterns
 ------------
+
+URL pattern is a string which can contain placeholders for parameters.
+Parameters are captured into ``trace.args`` tuple in a corresponding order.
+
+Parameters are typed to strings by default, but you can also annotate them to be
+integers or enumerations or path segments:
+
+  * ``/news/{year:int}-{month:int}-{day:int}/``
+    will match against ``/news/2001-12-12/`` and ``trace.args`` will contain
+    tuple ``(2001, 12, 12)``.
+
+  * ``/show/{type:any(news, comments)}``
+    will match against ``/show/news`` or ``/show/comments``
+
+  * ``/wiki/{page:path}``
+    will match against ``/wiki/category/page/comments``, note that type ``path``
+    allows ``/`` to be captured while ``str`` (which is also default type)
+    doesn't do that
 
 Trace object
 ------------
@@ -213,8 +230,6 @@ For the complete reference, these are classes which are constructed by
 .. autoclass:: routr.RouteGroup
 
 .. autoclass:: routr.Endpoint
-
-.. autoclass:: routr.RootEndpoint
 
 .. module:: routr.schema
 

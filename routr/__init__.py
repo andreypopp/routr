@@ -18,7 +18,7 @@ from routr.exc import (
 
 __all__ = (
     "Configuration", "route", "include", "plug", "Trace",
-    "Route", "Endpoint", "RootEndpoint", "RouteGroup", "HTTPMethod",
+    "Route", "Endpoint", "RouteGroup", "HTTPMethod",
     "GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "TRACE", "PATCH",
     "NoMatchFound", "RouteConfigurationError")
 
