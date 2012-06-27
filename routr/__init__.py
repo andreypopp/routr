@@ -553,11 +553,14 @@ class Configuration(object):
 
             routes, args = consume(
                 lambda d: isinstance(d, Route))
-
             if routes:
                 return self.group(routes, self, guards, pattern, **kwargs)
             elif len(args) == 1:
                 target = args[0]
+                return self.endpoint(target, method, name, self, guards,
+                        pattern, **kwargs)
+            elif not args and guards:
+                target = guards.pop()
                 return self.endpoint(target, method, name, self, guards,
                         pattern, **kwargs)
             else:
