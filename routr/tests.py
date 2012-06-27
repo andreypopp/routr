@@ -223,7 +223,6 @@ class TestRouteGroup(TestRouting):
         r = route("news",
                 route("{id:int}",
                     route("comments", "view")))
-        print r
         req = Request.blank("/news/42/comments")
         tr = r(req)
         self.assertEqual(
