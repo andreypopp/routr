@@ -5,6 +5,8 @@
   allows better composability w/o requirement to share configuration object
   between different parts of the app
 
+* add ``routr.static`` for serving static files
+
 0.2.1
 -----
 
