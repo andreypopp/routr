@@ -5,9 +5,13 @@
 
 """
 
+import types
+import inspect
 import sys
 
-__all__ = ("import_string", "cached_property", "ImportStringError", "join")
+__all__ = (
+    "import_string", "cached_property", "ImportStringError", "join",
+    "positional_args")
 
 class cached_property(object):
     """ Just like ``property`` but computed only once"""
@@ -123,3 +127,38 @@ def join(a, b):
     a = a or ""
     b = b or ""
     return a.rstrip("/") + "/" + b.lstrip("/")
+
+def positional_args(obj):
+    """ Return ordered list of positional args with which ``obj`` can be called
+
+    :param obj:
+        can be a plain function (or lambda) or some type object or method or
+        simply callable object (with __call__ method defined)
+    """
+    if isinstance(obj, types.FunctionType):
+        return _positional_args(obj)
+    if isinstance(obj, type):
+        obj = obj.__init__
+    elif isinstance(obj, types.MethodType):
+        pass
+    elif hasattr(obj, "__call__"):
+        obj = obj.__call__
+    args = _positional_args(obj)
+    if "self" in args:
+        args.remove("self")
+    return args
+
+def _positional_args(func):
+    argspec = inspect.getargspec(func)
+    return (argspec.args[:-len(argspec.defaults)]
+        if argspec.defaults
+        else argspec.args)
+
+def inject_args(obj, args, **injections):
+    """ Inject args for given callable ``obj``, ``args`` with ``injections``"""
+    args = list(args)
+    pos_args = positional_args(obj)
+    for k, arg in injections.items():
+        if k in pos_args:
+            args.insert(pos_args.index(k), arg)
+    return args

@@ -12,6 +12,7 @@ from routr.schema import String, Int, opt, qs
 from routr import Route, Endpoint, RouteGroup, URLPattern
 from routr import route, RouteConfigurationError
 from routr import POST, GET
+from routr.utils import positional_args, inject_args
 from routr.exc import (
     NoURLPatternMatched, RouteGuarded, MethodNotAllowed, RouteReversalError)
 
@@ -455,3 +456,83 @@ class TestURLPattern(TestCase):
         self.assertEqual(p.match("/a/ccc/b/"), ('', ("ccc",)))
         self.assertRaises(NoURLPatternMatched, p.match, "/a")
         self.assertRaises(NoURLPatternMatched, p.match, "/a/abc/b/")
+
+class TestPositionalArgs(TestCase):
+
+    def test_func(self):
+        def f(a, b, c):
+            pass
+        self.assertEqual(positional_args(f), ["a", "b", "c"])
+        def f(a, b, c, d=1):
+            pass
+        self.assertEqual(positional_args(f), ["a", "b", "c"])
+        def f(a, b, c, **kw):
+            pass
+        self.assertEqual(positional_args(f), ["a", "b", "c"])
+        def f(*args):
+            pass
+        self.assertEqual(positional_args(f), [])
+        def f(*args, **kw):
+            pass
+        self.assertEqual(positional_args(f), [])
+        def f(a, b, c, *args):
+            pass
+        self.assertEqual(positional_args(f), ["a", "b", "c"])
+        def f(a, b, c, *args, **kw):
+            pass
+        self.assertEqual(positional_args(f), ["a", "b", "c"])
+
+    def test_lambda(self):
+        f = lambda a, b, c: None
+        self.assertEqual(positional_args(f), ["a", "b", "c"])
+        f = lambda a, b, c, d=1: None
+        self.assertEqual(positional_args(f), ["a", "b", "c"])
+        f = lambda a, b, c, **kw: None
+        self.assertEqual(positional_args(f), ["a", "b", "c"])
+        f = lambda *args: None
+        self.assertEqual(positional_args(f), [])
+        f = lambda *args, **kw: None
+        self.assertEqual(positional_args(f), [])
+        f = lambda a, b, c, *args: None
+        self.assertEqual(positional_args(f), ["a", "b", "c"])
+        f = lambda a, b, c, *args, **kw: None
+        self.assertEqual(positional_args(f), ["a", "b", "c"])
+
+    def test_type(self):
+        class f(object):
+            def __init__(self, a, b, c):
+                pass
+        self.assertEqual(positional_args(f), ["a", "b", "c"])
+
+    def test___call__(self):
+        class f(object):
+            def __call__(self, a, b, c):
+                pass
+        f = f()
+        self.assertEqual(positional_args(f), ["a", "b", "c"])
+
+    def test_method(self):
+        class f(object):
+            def method(self, a, b, c):
+                pass
+        f = f().method
+        self.assertEqual(positional_args(f), ["a", "b", "c"])
+
+class TestInjectArgs(TestCase):
+
+    def test_simple(self):
+        def f(user, a, request):
+            pass
+        self.assertEqual(
+            inject_args(f, ['a'], user='user', request='request'),
+            ['user', 'a', 'request'])
+        def f(a, request):
+            pass
+        self.assertEqual(
+            inject_args(f, ['a'], user='user', request='request'),
+            ['a', 'request'])
+        def f(user, a):
+            pass
+        self.assertEqual(
+            inject_args(f, ['a'], user='user', request='request'),
+            ['user', 'a'])

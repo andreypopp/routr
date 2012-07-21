@@ -7,6 +7,10 @@
 
 * add ``routr.static`` for serving static files
 
+* add ``routr.utils.positional_args`` for introspection of positional arguments
+  of different types of objects and ``routr.utils.inject_args`` for injecting
+  positional arguments based on introspection
+
 0.2.1
 -----
 
