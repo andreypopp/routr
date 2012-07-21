@@ -1,7 +1,7 @@
 """
 
-    wk.doc -- extension for generating documentation with sphinx
-    ============================================================
+    routr.doc -- extension for generating documentation with sphinx
+    ===============================================================
 
 """
 
