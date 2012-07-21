@@ -1,3 +1,15 @@
+0.3
+---
+
+* get rid of ``Configuration``, now ``route`` is just a plain function -- this
+  allows better composability w/o requirement to share configuration object
+  between different parts of the app
+
+0.2.1
+-----
+
+* bugfixes to DSL
+
 0.2
 ---
 
