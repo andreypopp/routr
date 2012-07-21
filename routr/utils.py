@@ -11,7 +11,7 @@ import sys
 
 __all__ = (
     "import_string", "cached_property", "ImportStringError", "join",
-    "positional_args")
+    "positional_args", "inject_args")
 
 class cached_property(object):
     """ Just like ``property`` but computed only once"""
