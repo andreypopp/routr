@@ -114,6 +114,12 @@ class ImportStringError(ImportError):
                                  self.exception)
 
 def join(a, b):
+    """ Join two URL parts
+
+        >>> join("/a/", "/b/")
+        '/a/b/'
+
+    """
     a = a or ""
     b = b or ""
     return a.rstrip("/") + "/" + b.lstrip("/")
