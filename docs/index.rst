@@ -170,6 +170,36 @@ along the matched path. This, for example, can be useful for implementing
 middleware system like Django does but this allows only fire some middleware on
 those routes which was annotated correspondingly.
 
+Serving static assets with routr
+--------------------------------
+
+Routr provides a shortcut for defining routes for serving static data, it uses
+``webob.static`` under the hood. While this is not a production-ready solution
+(I recommend nginx for this) it can be quite useful during development for
+serving static assets such as HTML, CSS or javascript.
+
+To define route you just need to use the :func:`routr.static.static`
+function::
+
+    from routr.static import static
+
+    routes = route(
+      ...
+      static('/static', 'static'),
+      ...
+      )
+
+Note, that handler for these routes accepts only two arguments -- ``request``
+and ``path``, so you need to distinguish it using ``static_view`` annotation
+from other target objects and handle call to it separately like this::
+
+    ...
+    trace = routes(request)
+    if trace.endpoint.annotations.get('static_view'):
+      return trace.target(request, *trace.args)
+    ...
+
+
 Generating documentation from routes
 ------------------------------------
 
@@ -242,3 +272,5 @@ guard and helper utilites:
 
 Also :mod:`routr.schema` module re-exports :mod:`colander` package, so you can
 import any colander class or function right from there.
+
+.. autofunction:: routr.static.static

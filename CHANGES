@@ -1,3 +1,9 @@
+0.3.2
+-----
+
+* ``routr.static.static`` routes now can be distinguished via ``static_view``
+  annotation instead of view attribute (still here for backward compatibility)
+
 0.3.1
 -----
 
