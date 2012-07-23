@@ -10,6 +10,7 @@ setup(
     long_description=open("README").read() + "\n\n" + open("CHANGES").read(),
     author="Andrey Popp",
     author_email="8mayday@gmail.com",
+    url="http://routr.readthedocs.org/",
     license="BSD",
     packages=find_packages(exclude=["ez_setup", "examples", "tests"]),
     install_requires=[
