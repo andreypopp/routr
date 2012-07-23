@@ -6,9 +6,16 @@ Just a small example::
   from routr import route, GET, POST
   from routr.schema import form, String
 
+  def create_user(username=None):
+    ...
+
+  def get_user(id):
+    ...
+
   routes = route("/users",
-    route(POST, "/",          "views.create_user", guards=[form(username=String)]),
-    route(GET,  "/{id:int}",  "views.get_user"))
+    route(POST, "/",          form(username=String), create_user),
+    route(GET,  "/{id:int}",  get_user)
+    )
 
 Docs_ are hosted at excellent readthedocs project.
 
