@@ -66,7 +66,7 @@ it based on ``Accept`` header of a ``request``::
             if best == 'application/json':
                 response = Response(json=response)
             elif best == 'text/html':
-                template = target.endpoint.annotations.get('template', 't.html')
+                template = target.endpoint.annotations.get('template')
                 if not template:
                     raise HTTPBadRequest('invalid Accept header')
                 response = Response(template.render(response))
