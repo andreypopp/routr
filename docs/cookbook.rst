@@ -88,7 +88,7 @@ Augmenting HTTP method detection
 Some javascript libraries have compatibility shim for older browser which do not
 support methods like PUT or DELETE in XHR -- it emulates DELETE and PUT methods
 by calling POST with method passed as GET parameter. You can teach ``routr`` how
-to spot this behaviour by using subclassing :class:`webob.Request` object::
+to spot this behaviour by subclassing of :class:`webob.Request` object::
 
     from webob import Request as BaseRequest
 
