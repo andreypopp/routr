@@ -1,15 +1,17 @@
 Cookbook
 ========
 
-There are a lot of possibilities and variations in usage of ``routr`` -- this
-page tries to provide some useful examples.
+There are a lot of possibilities, variations and patterns of usage of ``routr``
+-- this page tries to provide some useful blocks as a foundation for your custom
+routing solution.
 
 Argument injection
 ------------------
 
 How to decide when to pass ``request`` as an argument to a function? You can
 analyze function signature for that -- use :func:`routr.utils.inject_arguments`
-function which can inject needed arguments into arguments' tuple::
+function which can inject needed arguments into arguments' tuple based on
+function signature::
 
     from webob.dec import wsgify
     from routr import GET, route
@@ -79,3 +81,24 @@ object and based on Accept header of a ``request`` WSGI application will
 serialize data into ``application/json`` or either ``text/html`` format. The
 latter will be serialized using template which is set by ``template`` annotation
 on a corresponding route.
+
+Augmenting HTTP method detection
+---------------------------------
+
+Some javascript libraries have compatibility shim for older browser which do not
+support methods like PUT or DELETE in XHR -- it emulates DELETE and PUT methods
+by calling POST with method passed as GET parameter. You can teach ``routr`` how
+to spot this behaviour by using subclassing :class:`webob.Request` object::
+
+    from webob import Request as BaseRequest
+
+    class Request(BaseRequest):
+
+        @property
+        def method(self):
+            orig_method = super(Request, self).method
+            if orig_method == 'POST':
+                emul_method = self.GET.get('_method').upper()
+                if emul_method in ('PUT', 'DELETE'):
+                    return emul_method
+            return orig_method
