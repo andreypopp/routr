@@ -348,9 +348,9 @@ class URLPattern(object):
 
     _type_re = re.compile("""
         {
-        (?P<label>[a-z]+)            # label
-        (:(?P<type>[a-z]+))?         # optional type identifier
-        (\(                          # optional args
+        (?P<label>[a-zA-Z][a-zA-Z0-9]*)     # label
+        (:(?P<type>[a-zA-Z][a-zA-Z0-9]*))?  # optional type identifier
+        (\(                                 # optional args
             (?P<args>[a-zA-Z= ,_]*)
         \))?
         }""", re.VERBOSE)
