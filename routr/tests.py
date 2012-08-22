@@ -443,6 +443,17 @@ class TestURLPattern(TestCase):
         self.assertTrue(not p.is_exact)
         self.assertEqual(p.match("/a/42/b/"), ('', ("42",)))
 
+    def test_str_re(self):
+        p = URLPattern("/a/{id:str(re=[0-9]+)}/b/")
+        self.assertTrue(not p.is_exact)
+        self.assertEqual(p.match("/a/42/b/"), ('', ("42",)))
+        self.assertRaises(NoURLPatternMatched, p.match, "/a/a/b/")
+
+        p = URLPattern("/a/{id:str(re=[0-9a-f]{6})}/b/")
+        self.assertTrue(not p.is_exact)
+        self.assertEqual(p.match("/a/12efa3/b/"), ('', ("12efa3",)))
+        self.assertRaises(NoURLPatternMatched, p.match, "/a/a/b/")
+
     def test_path(self):
         p = URLPattern("/a/{id:path}/b/")
         self.assertTrue(not p.is_exact)

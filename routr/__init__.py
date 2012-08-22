@@ -321,8 +321,12 @@ def parse_args(line):
     return args, kwargs
 
 def handle_str(args):
-    if args:
-        raise InvalidRoutePattern("'str' type doesn't accept args")
+    args, kwargs = parse_args(args)
+    re = kwargs.pop('re', None)
+    if kwargs or args:
+        raise InvalidRoutePattern("invalid args for 'str' type")
+    if re:
+        return (re + "(?=$|/)", None)
     return ("[^/]+", None)
 
 def handle_path(args):
@@ -351,7 +355,7 @@ class URLPattern(object):
         (?P<label>[a-zA-Z][a-zA-Z0-9]*)     # label
         (:(?P<type>[a-zA-Z][a-zA-Z0-9]*))?  # optional type identifier
         (\(                                 # optional args
-            (?P<args>[a-zA-Z= ,_]*)
+            (?P<args>[a-zA-Z= ,_\[\]\+\-0-9\{\}]*)
         \))?
         }""", re.VERBOSE)
 
