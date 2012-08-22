@@ -9,6 +9,7 @@ from unittest import TestCase
 from webob import Request, exc
 
 from routr.schema import String, Int, opt, qs
+from routr.schema2 import validate
 from routr import Route, Endpoint, RouteGroup, URLPattern
 from routr import route, RouteConfigurationError
 from routr import POST, GET
@@ -547,3 +548,15 @@ class TestInjectArgs(TestCase):
         self.assertEqual(
             inject_args(f, ['a'], user='user', request='request'),
             ['user', 'a'])
+
+class TestSchema2(TestCase):
+
+    def test_simple(self):
+        self.assertEqual(validate(int, 1), 1)
+        self.assertEqual(validate(int, "1"), 1)
+        self.assertEqual(validate(str, "1"), "1")
+        self.assertEqual(validate([int], ["1"]), [1])
+        self.assertEqual(validate((int, int), ("1", "2")), (1, 2))
+        self.assertEqual(
+            validate({"a": int, "b": str}, {"a": "1", "b": "c"}),
+            {"a": 1, "b": "c"})
