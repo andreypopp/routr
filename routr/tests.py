@@ -9,7 +9,7 @@ from unittest import TestCase
 from webob import Request, exc
 
 from routr.schema import String, Int, opt, qs
-from routr.schema2 import validate
+from routr.schema2 import validate, ValidationError, opt as opt2, qs as qs2
 from routr import Route, Endpoint, RouteGroup, URLPattern
 from routr import route, RouteConfigurationError
 from routr import POST, GET
@@ -148,32 +148,38 @@ class TestEndpoint(TestRouting):
             ((u"42/news",), {}, "target"))
 
     def test_param_guard(self):
-        r = route(
+        r1 = route(
             "/news/{id:int}/",
             qs(q=opt(String), page=opt(Int)),
             "target")
+        r2 = route(
+            "/news/{id:int}/",
+            qs2(q=opt2(str), page=opt2(int)),
+            "target")
 
-        req = Request.blank("/news/42/")
-        tr = r(req)
-        self.assertEqual(
-            (tr.args, tr.kwargs, tr.target),
-            ((42,), {}, "target"))
+        for r in (r1, r2):
 
-        req = Request.blank("/news/42/?q=search")
-        tr = r(req)
-        self.assertEqual(
-            (tr.args, tr.kwargs.items(), tr.target),
-            ((42,), [("q", "search")], "target"))
+            req = Request.blank("/news/42/")
+            tr = r(req)
+            self.assertEqual(
+                (tr.args, tr.kwargs, tr.target),
+                ((42,), {}, "target"))
 
-        req = Request.blank("/news/42/?q=search&page=100")
-        tr = r(req)
-        self.assertEqual(
-            (tr.args, tr.kwargs.items(), tr.target),
-            ((42,), [("q", "search"), ("page", 100)], "target"))
+            req = Request.blank("/news/42/?q=search")
+            tr = r(req)
+            self.assertEqual(
+                (tr.args, tr.kwargs.items(), tr.target),
+                ((42,), [("q", "search")], "target"))
 
-        self.assertRaises(
-            exc.HTTPBadRequest,
-            r, Request.blank("/news/42/?q=search&page=aa"))
+            req = Request.blank("/news/42/?q=search&page=100")
+            tr = r(req)
+            self.assertEqual(
+                (tr.args, tr.kwargs.items(), tr.target),
+                ((42,), [("q", "search"), ("page", 100)], "target"))
+
+            self.assertRaises(
+                exc.HTTPBadRequest,
+                r, Request.blank("/news/42/?q=search&page=aa"))
 
 class TestRouteGroup(TestRouting):
 
@@ -560,3 +566,26 @@ class TestSchema2(TestCase):
         self.assertEqual(
             validate({"a": int, "b": str}, {"a": "1", "b": "c"}),
             {"a": 1, "b": "c"})
+        self.assertEqual(validate(bool, 1), True)
+        self.assertEqual(validate(bool, "1"), True)
+
+    def test_tuple(self):
+        self.assertEqual(validate((int, int), (1, 2)), (1, 2))
+        self.assertEqual(validate((int, str), (1, '2')), (1, '2'))
+        self.assertEqual(validate((int, str), ('1', '2')), (1, '2'))
+        self.assertRaises(ValidationError, validate, (int, str), ('s', 'a'))
+        self.assertRaises(ValidationError, validate, (int, str), (1,))
+
+    def test_list(self):
+        self.assertEqual(validate([int], ['1', '2']), [1, 2])
+        self.assertEqual(validate([str], ['1', '2']), ['1', '2'])
+
+    def test_dict(self):
+        self.assertEqual(validate({'a': int}, {'a': '1'}), {'a': 1})
+        self.assertEqual(validate({'a': int}, {'a': '1', 'b': '2'}), {'a': 1})
+        self.assertRaises(ValidationError, validate, {'a': int}, {})
+        self.assertRaises(ValidationError, validate, {'a': int}, {'b': '1'})
+        self.assertRaises(ValidationError, validate, {'a': int}, {'a': 's'})
+
+        self.assertEqual(validate({'a': opt2(int)}, {}), {})
+        self.assertEqual(validate({'a': opt2(int)}, {'a': '1'}), {'a': 1})
