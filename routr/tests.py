@@ -202,6 +202,21 @@ class TestRouteGroup(TestRouting):
         self.assertEqual(r.reverse("get-news"), "/api")
         self.assertEqual(r.reverse("create-news"), "/api")
 
+    def test_custom_url_pattern_cls(self):
+        from routr.urlpattern import URLPattern
+        class MyURLPattern(URLPattern):
+            pass
+
+        r = route("api",
+            route(GET, "news", "news", name="get-news"),
+            route(POST, "news", "news", name="create-news"),
+            url_pattern_cls=MyURLPattern)
+
+        self.assertTrue(isinstance(r.pattern, MyURLPattern))
+        for r in r.routes:
+            self.assertTrue(isinstance(r.pattern, MyURLPattern))
+
+
     def test_reverse_empty_pattern(self):
         r = route(route("news", name="news"))
         self.assertEqual(r.reverse("news"), "/")
