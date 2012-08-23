@@ -1,3 +1,9 @@
+0.3.4
+-----
+
+* URL pattern type ``str`` now has ``re`` arg -- allows to validate string via
+  regexp
+
 0.3.3
 -----
 
