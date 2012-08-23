@@ -1,3 +1,11 @@
+0.4
+---
+
+* allow setting custom class for URL matching -- use ``url_pattern_cls`` keyword
+  argument for ``route`` directive
+
+* lightweight schema validation package ``routr.schema2``
+
 0.3.4
 -----
 
