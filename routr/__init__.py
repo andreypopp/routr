@@ -26,6 +26,9 @@ __all__ = (
 class HTTPMethod(str):
     """ HTTP method"""
 
+    def __call__(self, *args, **kwargs):
+        return route(self, *args, **kwargs)
+
 GET     = HTTPMethod("GET")
 POST    = HTTPMethod("POST")
 PUT     = HTTPMethod("PUT")
