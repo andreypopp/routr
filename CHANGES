@@ -1,3 +1,8 @@
+0.4.1
+-----
+
+* HTTP methods constants now can be used to define routes
+
 0.4
 ---
 
