@@ -1,7 +1,10 @@
 """
 
-    routr -- define routes
-    ======================
+    routr -- routing engine for WebOb based WSGI applications
+    =========================================================
+
+    This module provides data structures along with easy-to-use DSLish API to
+    define complex routing rules for WSGI applications based on WebOb.
 
 """
 
@@ -26,7 +29,12 @@ __all__ = (
     "NoMatchFound", "RouteConfigurationError")
 
 class HTTPMethod(str):
-    """ HTTP method"""
+    """ HTTP method
+
+    Objects of this type represent HTTP method constants. They are also callable
+    -- work as a shortcut for defining route with corresponding method --
+    ``route(GET, ...)`` equivalent to ``GET(...)``.
+    """
 
     def __call__(self, *args, **kwargs):
         return route(self, *args, **kwargs)
@@ -53,8 +61,6 @@ class Trace(object):
         a list of matched routes with the endpoint route being the last one
     :attr endpoint:
         matched endpoint route
-
-    Attributes of :attr:`.endpoint` route are made available on trace itself.
     """
 
     def __init__(self, args, kwargs, routes, payload=None):
@@ -102,6 +108,11 @@ class Route(object):
         a list of guards
     :param pattern:
         pattern for URL pattern
+    :param url_pattern_cls:
+        class which should be used for URL pattern matching (default to
+        :class:`.urlpattern.URLPattern`
+    :param annotations:
+        various annotations
     """
 
     url_pattern_cls = None
@@ -114,6 +125,7 @@ class Route(object):
 
     @cached_property
     def pattern(self):
+        """ Compiled pattern"""
         return self.compile_pattern(self._pattern)
 
     def compile_pattern(self, pattern):
