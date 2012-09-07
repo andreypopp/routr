@@ -9,7 +9,8 @@ import re
 from urllib import urlencode
 from pkg_resources import iter_entry_points
 
-from webob.exc import HTTPException
+from schemify import opt, anything, validate, ValidationError
+from webob.exc import HTTPException, HTTPBadRequest
 from routr.utils import import_string, cached_property
 from routr.urlpattern import URLPattern
 from routr.exc import (
@@ -21,6 +22,7 @@ __all__ = (
     "Configuration", "route", "include", "plug", "Trace",
     "Route", "Endpoint", "RouteGroup", "HTTPMethod",
     "GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "TRACE", "PATCH",
+    "qs", "form", "RequestParams",
     "NoMatchFound", "RouteConfigurationError")
 
 class HTTPMethod(str):
@@ -420,3 +422,30 @@ def route(*args, **kwargs):
         else:
             raise RouteConfigurationError(
                 "improper usage of 'route' directive")
+
+class RequestParams(object):
+
+    def __init__(self, **fields):
+        self.schema = fields
+
+    def params(self, request):
+        raise NotImplementedError()
+
+    def __call__(self, request, trace):
+        params = self.params(request)
+        try:
+            result = validate(self.schema, params)
+        except ValidationError as e:
+            raise HTTPBadRequest(e.error)
+        else:
+            trace.kwargs.update(result)
+
+class qs(RequestParams):
+
+    def params(self, request):
+        return request.GET
+
+class form(RequestParams):
+
+    def params(self, request):
+        return request.POST

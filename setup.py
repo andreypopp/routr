@@ -15,7 +15,8 @@ setup(
     packages=find_packages(exclude=["ez_setup", "examples", "tests"]),
     install_requires=[
         "colander >= 0.9.5",
-        "WebOb >= 1.2b3"
+        "WebOb >= 1.2b3",
+        "schemify >= 0.1",
     ],
     include_package_data=True,
     test_suite="routr.tests",
