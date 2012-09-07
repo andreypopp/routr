@@ -58,10 +58,11 @@ class Trace(object):
     """
 
     def __init__(self, args, kwargs, routes, payload=None):
-        self.__dict__["args"] = args
-        self.__dict__["kwargs"] = kwargs
-        self.__dict__["routes"] = routes
-        self.__dict__["payload"] = payload or {}
+        self.__dict__["payload"] = payload or {
+            "args": args,
+            "kwargs": kwargs,
+            "routes": routes
+        }
 
     @property
     def endpoint(self):
@@ -79,6 +80,11 @@ class Trace(object):
         routes.extend(tr.routes)
         payload = dict(self.payload)
         payload.update(tr.payload)
+        payload.update({
+            "args": args,
+            "kwargs": kwargs,
+            "routes": routes,
+            })
         return self.__class__(args, kwargs, routes, payload)
 
     def __setattr__(self, name, value):
