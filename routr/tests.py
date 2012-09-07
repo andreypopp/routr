@@ -10,6 +10,7 @@ from webob import Request, exc
 
 from routr.schema import String, Int, opt, qs
 from routr.schema2 import validate, ValidationError, opt as opt2, qs as qs2
+from routr.schema2 import anything
 from routr import Route, Endpoint, RouteGroup, URLPattern
 from routr import route, RouteConfigurationError
 from routr import POST, GET
@@ -618,3 +619,8 @@ class TestSchema2(TestCase):
         data = {'x': 'id', 'y': {'z': 'a'}}
         self.assertRaises(ValidationError, validate, schema, data)
 
+    def test_anything(self):
+        self.assertEqual(validate(anything, 1), 1)
+        self.assertEqual(validate(anything, 'a'), 'a')
+        self.assertEqual(validate({'a': anything}, {'a': 1}), {'a': 1})
+        self.assertEqual(validate({'a': anything}, {'a': '1'}), {'a': '1'})

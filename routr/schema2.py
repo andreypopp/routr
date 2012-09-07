@@ -7,7 +7,7 @@
 
 from webob.exc import HTTPBadRequest
 
-__all__ = ('validate', 'opt', 'ValidationError')
+__all__ = ('validate', 'opt', 'ValidationError', 'anything', 'qs', 'form')
 
 
 class ValidationError(ValueError):
@@ -18,6 +18,9 @@ class ValidationError(ValueError):
         super(ValueError, self).__init__(error)
 
 def validate(schema, data):
+
+    if schema is anything:
+        return data
 
     if isinstance(schema, tuple) and hasattr(schema, '_replace'):
         result = validate(schema._asdict(), data)
@@ -60,6 +63,7 @@ def validate(schema, data):
             raise ValidationError(str(e))
 
 _no_default = object()
+anything = object()
 
 class opt(object):
     """ Marker for optional elements in container"""
