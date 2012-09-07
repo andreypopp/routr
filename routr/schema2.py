@@ -29,6 +29,8 @@ def validate(schema, data):
             if not k in data:
                 if not isinstance(v, opt):
                     errors[k] = 'missing %s key' % k
+                elif v.default is not _no_default:
+                    result[k] = v.default
                 continue
             if isinstance(v, opt):
                 v = v.type
@@ -57,11 +59,14 @@ def validate(schema, data):
         except ValueError as e:
             raise ValidationError(str(e))
 
+_no_default = object()
+
 class opt(object):
     """ Marker for optional elements in container"""
 
-    def __init__(self, type):
+    def __init__(self, type, default=_no_default):
         self.type = type
+        self.default = default
 
 class RequestParams(object):
 

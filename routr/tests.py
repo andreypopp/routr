@@ -604,6 +604,7 @@ class TestSchema2(TestCase):
 
         self.assertEqual(validate({'a': opt2(int)}, {}), {})
         self.assertEqual(validate({'a': opt2(int)}, {'a': '1'}), {'a': 1})
+        self.assertEqual(validate({'a': opt2(int, 3)}, {}), {'a': 3})
 
     def test_namedtuple(self):
         from collections import namedtuple
