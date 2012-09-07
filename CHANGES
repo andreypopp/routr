@@ -1,3 +1,10 @@
+0.4.2
+-----
+
+* routr.schema2: opt now can provide default value
+
+* routr.schema2: allow namedtuple-based schemas
+
 0.4.1
 -----
 
