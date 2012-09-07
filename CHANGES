@@ -1,3 +1,13 @@
+0.5
+---
+
+* use ``schemify`` for schema validation
+
+* remove ``routr.schema`` completely
+
+* remove ``routr.schema2`` -- ``qs`` and ``form`` guards are now can be imported directly
+  from ``routr`` module
+
 0.4.2
 -----
 
