@@ -604,3 +604,16 @@ class TestSchema2(TestCase):
 
         self.assertEqual(validate({'a': opt2(int)}, {}), {})
         self.assertEqual(validate({'a': opt2(int)}, {'a': '1'}), {'a': 1})
+
+    def test_namedtuple(self):
+        from collections import namedtuple
+        X = namedtuple('X', 'x y')
+        Y = namedtuple('Y', 'z')
+        schema = X(x=str, y=Y(z=int))
+
+        data = {'x': 'id', 'y': {'z': 3}}
+        self.assertEqual(validate(schema, data), X('id', Y(3)))
+
+        data = {'x': 'id', 'y': {'z': 'a'}}
+        self.assertRaises(ValidationError, validate, schema, data)
+

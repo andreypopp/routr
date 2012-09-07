@@ -18,6 +18,11 @@ class ValidationError(ValueError):
         super(ValueError, self).__init__(error)
 
 def validate(schema, data):
+
+    if isinstance(schema, tuple) and hasattr(schema, '_replace'):
+        result = validate(schema._asdict(), data)
+        return type(schema)(**result)
+
     if isinstance(schema, dict):
         result, errors = {}, {}
         for k, v in schema.items():
