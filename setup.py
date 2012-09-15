@@ -16,7 +16,6 @@ setup(
     install_requires=[
         "colander >= 0.9.5",
         "WebOb >= 1.2b3",
-        "schemify >= 0.1",
     ],
     include_package_data=True,
     test_suite="routr.tests",
