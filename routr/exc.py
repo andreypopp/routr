@@ -8,9 +8,9 @@
 from webob import exc
 
 __all__ = (
-    "NoMatchFound", "NoURLPatternMatched", "RouteGuarded", "MethodNotAllowed",
-    "RouteConfigurationError", "InvalidRoutePattern",
-    "RouteReversalError")
+    'NoMatchFound', 'NoURLPatternMatched', 'RouteGuarded', 'MethodNotAllowed',
+    'RouteConfigurationError', 'InvalidRoutePattern',
+    'RouteReversalError')
 
 class NoMatchFound(Exception):
     """ Raised when request wasn't matched against any route

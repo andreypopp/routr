@@ -21,10 +21,10 @@ from routr.exc import (
     RouteReversalError)
 
 __all__ = (
-    "Configuration", "route", "include", "plug", "Trace",
-    "Route", "Endpoint", "RouteGroup", "HTTPMethod",
-    "GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "TRACE", "PATCH",
-    "NoMatchFound", "RouteConfigurationError")
+    'Configuration', 'route', 'include', 'plug', 'Trace',
+    'Route', 'Endpoint', 'RouteGroup', 'HTTPMethod',
+    'GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'PATCH',
+    'NoMatchFound', 'RouteConfigurationError')
 
 class HTTPMethod(str):
     """ HTTP method
@@ -37,14 +37,14 @@ class HTTPMethod(str):
     def __call__(self, *args, **kwargs):
         return route(self, *args, **kwargs)
 
-GET     = HTTPMethod("GET")
-POST    = HTTPMethod("POST")
-PUT     = HTTPMethod("PUT")
-DELETE  = HTTPMethod("DELETE")
-HEAD    = HTTPMethod("HEAD")
-OPTIONS = HTTPMethod("OPTIONS")
-TRACE   = HTTPMethod("TRACE")
-PATCH   = HTTPMethod("PATCH")
+GET     = HTTPMethod('GET')
+POST    = HTTPMethod('POST')
+PUT     = HTTPMethod('PUT')
+DELETE  = HTTPMethod('DELETE')
+HEAD    = HTTPMethod('HEAD')
+OPTIONS = HTTPMethod('OPTIONS')
+TRACE   = HTTPMethod('TRACE')
+PATCH   = HTTPMethod('PATCH')
 
 class Trace(object):
     """ Result of route matching
@@ -62,10 +62,10 @@ class Trace(object):
     """
 
     def __init__(self, args, kwargs, routes, payload=None):
-        self.__dict__["payload"] = payload or {
-            "args": args,
-            "kwargs": kwargs,
-            "routes": routes
+        self.__dict__['payload'] = payload or {
+            'args': args,
+            'kwargs': kwargs,
+            'routes': routes
         }
 
     @property
@@ -85,9 +85,9 @@ class Trace(object):
         payload = dict(self.payload)
         payload.update(tr.payload)
         payload.update({
-            "args": args,
-            "kwargs": kwargs,
-            "routes": routes,
+            'args': args,
+            'kwargs': kwargs,
+            'routes': routes,
             })
         return self.__class__(args, kwargs, routes, payload)
 
@@ -129,15 +129,15 @@ class Route(object):
     def compile_pattern(self, pattern):
         if not pattern:
             return None
-        if not pattern.startswith("/"):
-            pattern = "/" + pattern
+        if not pattern.startswith('/'):
+            pattern = '/' + pattern
         return (self.url_pattern_cls or URLPattern)(pattern)
 
     def match_pattern(self, path_info):
         """ Match ``path_info`` against route's ``pattern``"""
         if self.pattern is None:
-            if not path_info or path_info == "/":
-                return "", ()
+            if not path_info or path_info == '/':
+                return '', ()
             raise NoURLPatternMatched()
         return self.pattern.match(path_info)
 
@@ -229,16 +229,16 @@ class Endpoint(Route):
     def reverse(self, name, *args, **kwargs):
         if name != self.name:
             raise RouteReversalError("no route with name '%s'" % name)
-        url = self.pattern.reverse(*args) if self.pattern else "/"
+        url = self.pattern.reverse(*args) if self.pattern else '/'
         if kwargs:
-            url += "?" + urlencode(kwargs)
+            url += '?' + urlencode(kwargs)
         return url
 
     def __iter__(self):
         return iter([self])
 
     def __repr__(self):
-        return "%s(target=%r, guards=%r, pattern=%r)" % (
+        return '%s(target=%r, guards=%r, pattern=%r)' % (
             self.__class__.__name__, self.target, self.guards,
             self.pattern.pattern if self.pattern else None)
 
@@ -272,7 +272,7 @@ class RouteGroup(Route):
                 if self.pattern or r.pattern:
                     idx[r.name] = self.pattern + r.pattern
                 else:
-                    idx[r.name] = (self.url_pattern_cls or URLPattern)("/")
+                    idx[r.name] = (self.url_pattern_cls or URLPattern)('/')
             elif isinstance(r, RouteGroup):
                 ridx = r.index()
                 if set(ridx) & set(idx):
@@ -291,7 +291,7 @@ class RouteGroup(Route):
             raise RouteReversalError("no route with name '%s'" % name)
         url = self._cached_index[name].reverse(*args)
         if kwargs:
-            url += "?" + urlencode(kwargs)
+            url += '?' + urlencode(kwargs)
         return url
 
     def match_pattern(self, path_info):
@@ -333,7 +333,7 @@ class RouteGroup(Route):
         return iter(self.routes)
 
     def __repr__(self):
-        return "%s(routes=%r, guards=%r, pattern=%r)" % (
+        return '%s(routes=%r, guards=%r, pattern=%r)' % (
             self.__class__.__name__, self.routes, self.guards, self.pattern)
 
     __str__ = __repr__
@@ -357,7 +357,7 @@ def plug(name):
         entry point name to query routes
     """
     routes = []
-    for p in iter_entry_points("routr", name=name):
+    for p in iter_entry_points('routr', name=name):
         r = p.load()
         if not isinstance(r, Route):
             raise RouteConfigurationError(
@@ -387,14 +387,14 @@ def route(*args, **kwargs):
     args = list(args)
 
     if not args:
-        raise RouteConfigurationError("empty routes")
+        raise RouteConfigurationError('empty routes')
 
     method = args.pop(0) if isinstance(args[0], HTTPMethod) else GET
-    name = kwargs.pop("name", None)
-    url_pattern_cls = kwargs.pop("url_pattern_cls", None)
+    name = kwargs.pop('name', None)
+    url_pattern_cls = kwargs.pop('url_pattern_cls', None)
 
     if not args:
-        raise RouteConfigurationError("empty routes")
+        raise RouteConfigurationError('empty routes')
 
     if len(args) == 1 and not isinstance(args[0], Route):
         target = args[0]
@@ -416,7 +416,7 @@ def route(*args, **kwargs):
             pattern = None
 
         guards, args = consume(
-            lambda d: not isinstance(d, Route) and hasattr(d, "__call__"))
+            lambda d: not isinstance(d, Route) and hasattr(d, '__call__'))
 
         routes, args = consume(
             lambda d: isinstance(d, Route))

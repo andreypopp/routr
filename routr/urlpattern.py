@@ -18,9 +18,9 @@ def parse_args(line):
     kwargs = {}
     if not line:
         return args, kwargs
-    for item in (a.strip() for a in line.split(",") if a):
-        if "=" in item:
-            k, v = item.split("=", 1)
+    for item in (a.strip() for a in line.split(',') if a):
+        if '=' in item:
+            k, v = item.split('=', 1)
             kwargs[k.strip()] = v.strip()
         else:
             args.append(item)
@@ -32,18 +32,18 @@ def handle_str(args):
     if kwargs or args:
         raise InvalidRoutePattern("invalid args for 'str' type")
     if re:
-        return (re + "(?=$|/)", None)
-    return ("[^/]+", None)
+        return (re + '(?=$|/)', None)
+    return ('[^/]+', None)
 
 def handle_path(args):
     if args:
         raise InvalidRoutePattern("'path' type doesn't accept args")
-    return (".*", None)
+    return ('.*', None)
 
 def handle_int(args):
     if args:
         raise InvalidRoutePattern("'path' type doesn't accept args")
-    return ("[0-9]+", int)
+    return ('[0-9]+', int)
 
 def handle_any(args):
     args, kwargs = parse_args(args)
@@ -52,7 +52,7 @@ def handle_any(args):
     if kwargs:
         raise InvalidRoutePattern("'any' doesn't accept keyword args")
 
-    return ("(" + "|".join("(" + re.escape(x) + ")" for x in args) + ")", None)
+    return ('(' + '|'.join('(' + re.escape(x) + ')' for x in args) + ')', None)
 
 class URLPattern(object):
 
@@ -68,11 +68,11 @@ class URLPattern(object):
 
     typemap = {
         None:       handle_str,
-        "str":      handle_str,
-        "string":   handle_str,
-        "path":     handle_path,
-        "int":      handle_int,
-        "any":      handle_any,
+        'str':      handle_str,
+        'string':   handle_str,
+        'path':     handle_path,
+        'int':      handle_int,
+        'any':      handle_any,
     }
 
     def __init__(self, pattern):
@@ -100,19 +100,19 @@ class URLPattern(object):
             return
 
         names = []
-        compiled = ""
+        compiled = ''
         last = 0
         for n, m in enumerate(self._type_re.finditer(self.pattern)):
             compiled += re.escape(self.pattern[last:m.start()])
             typ, label, args = (
-                m.group("type"), m.group("label"), m.group("args"))
+                m.group('type'), m.group('label'), m.group('args'))
             if not typ in self.typemap:
                 raise InvalidRoutePattern(
                     "unknown type '%s' in pattern '%s'" % (typ, self.pattern))
             r, c = self.typemap[typ](args)
-            name = "_gpt%d" % n
+            name = '_gpt%d' % n
             names.append((name, c, label))
-            compiled += "(?P<%s>%s)" % (name, r)
+            compiled += '(?P<%s>%s)' % (name, r)
             last = m.end()
         compiled += re.escape(self.pattern[last:])
 
@@ -129,7 +129,7 @@ class URLPattern(object):
         if self._type_re.search(r):
             raise RouteReversalError(
                 "not enough params for reversal of '%s' route,"
-                " only %r was supplied" % (self.pattern, args))
+                ' only %r was supplied' % (self.pattern, args))
         return r
 
     def match(self, path_info):
@@ -162,5 +162,4 @@ class URLPattern(object):
         return self.__class__(join(o.pattern, self.pattern))
 
     def __repr__(self):
-        return "<%s %s>" % (self.__class__.__name__, self.pattern)
-
+        return '<%s %s>' % (self.__class__.__name__, self.pattern)

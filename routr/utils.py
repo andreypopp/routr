@@ -10,8 +10,8 @@ import inspect
 import sys
 
 __all__ = (
-    "import_string", "cached_property", "ImportStringError", "join",
-    "positional_args", "inject_args")
+    'import_string', 'cached_property', 'ImportStringError', 'join',
+    'positional_args', 'inject_args')
 
 class cached_property(object):
     """ Just like ``property`` but computed only once"""
@@ -120,13 +120,13 @@ class ImportStringError(ImportError):
 def join(a, b):
     """ Join two URL parts
 
-        >>> join("/a/", "/b/")
+        >>> join('/a/', '/b/')
         '/a/b/'
 
     """
-    a = a or ""
-    b = b or ""
-    return a.rstrip("/") + "/" + b.lstrip("/")
+    a = a or ''
+    b = b or ''
+    return a.rstrip('/') + '/' + b.lstrip('/')
 
 def positional_args(obj):
     """ Return ordered list of positional args with which ``obj`` can be called
@@ -141,11 +141,11 @@ def positional_args(obj):
         obj = obj.__init__
     elif isinstance(obj, types.MethodType):
         pass
-    elif hasattr(obj, "__call__"):
+    elif hasattr(obj, '__call__'):
         obj = obj.__call__
     args = _positional_args(obj)
-    if "self" in args:
-        args.remove("self")
+    if 'self' in args:
+        args.remove('self')
     return args
 
 def _positional_args(func):
