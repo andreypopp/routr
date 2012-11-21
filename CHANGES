@@ -1,3 +1,9 @@
+0.6.2
+-----
+
+* Trace.annotation(name, default=None) method to retrieve annotation from
+  routes.
+
 0.6.1
 -----
 
