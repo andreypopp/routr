@@ -76,6 +76,12 @@ class Trace(object):
     def target(self):
         return self.endpoint.target
 
+    def annotation(self, name, default=None):
+        for route in self.routes:
+            if name in route.annotations:
+                return route.annotations[name]
+        return default
+
     def __add__(self, tr):
         args = self.args + tr.args
         kwargs = dict(self.kwargs)
