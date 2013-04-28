@@ -10,6 +10,8 @@ try:
 except ImportError:
     from unittest import TestCase
 
+import six
+
 from webob import Request, exc
 
 from routr import Route, Endpoint, RouteGroup, URLPattern
@@ -128,13 +130,13 @@ class TestEndpoint(TestRouting):
         tr = r(req)
         self.assertEqual(
             (tr.args, tr.kwargs, tr.target),
-            ((u'42',), {}, 'target'))
+            ((six.u('42'),), {}, 'target'))
 
         req = Request.blank('/news/abcdef-12/')
         tr = r(req)
         self.assertEqual(
             (tr.args, tr.kwargs, tr.target),
-            ((u'abcdef-12',), {}, 'target'))
+            ((six.u('abcdef-12'),), {}, 'target'))
 
     def test_param_pattern_path(self):
         r = route('/news/{p:path}', 'target')
@@ -143,7 +145,7 @@ class TestEndpoint(TestRouting):
         tr = r(req)
         self.assertEqual(
             (tr.args, tr.kwargs, tr.target),
-            ((u'42/news',), {}, 'target'))
+            ((six.u('42/news'),), {}, 'target'))
 
         r = route('/news/{p:path}/comments', 'target')
 
@@ -151,7 +153,7 @@ class TestEndpoint(TestRouting):
         tr = r(req)
         self.assertEqual(
             (tr.args, tr.kwargs, tr.target),
-            ((u'42/news',), {}, 'target'))
+            ((six.u('42/news'),), {}, 'target'))
 
 
 class TestRouteGroup(TestRouting):
