@@ -5,7 +5,13 @@
 
 """
 
-from unittest import TestCase
+try:
+    from unittest2 import TestCase
+except ImportError:
+    from unittest import TestCase
+
+import six
+
 from webob import Request, exc
 
 from routr import Route, Endpoint, RouteGroup, URLPattern
@@ -15,7 +21,9 @@ from routr.utils import positional_args, inject_args
 from routr.exc import (
     NoURLPatternMatched, RouteGuarded, MethodNotAllowed, RouteReversalError)
 
+
 __all__ = ()
+
 
 class TestRouting(TestCase):
 
@@ -24,6 +32,7 @@ class TestRouting(TestCase):
             self.assertRaises(NoURLPatternMatched, r, url)
         else:
             self.assertRaises(NoURLPatternMatched, r, Request.blank(url))
+
 
 class TestRootEnpoint(TestRouting):
 
@@ -48,6 +57,7 @@ class TestRootEnpoint(TestRouting):
         req = Request.blank('/news')
         self.assertRaises(NoURLPatternMatched, r, req)
 
+
 class TestEndpoint(TestRouting):
 
     def test_reverse(self):
@@ -60,7 +70,7 @@ class TestEndpoint(TestRouting):
         self.assertRaises(RouteReversalError, r.reverse, 'news2')
 
         r = route('news/{any(login,attach,app_login,access_token)}',
-            'target', name='news')
+                  'target', name='news')
         self.assertEqual(r.reverse('news', 'aa'), '/news/aa')
         self.assertRaises(RouteReversalError, r.reverse, 'news2')
 
@@ -120,13 +130,13 @@ class TestEndpoint(TestRouting):
         tr = r(req)
         self.assertEqual(
             (tr.args, tr.kwargs, tr.target),
-            ((u'42',), {}, 'target'))
+            ((six.u('42'),), {}, 'target'))
 
         req = Request.blank('/news/abcdef-12/')
         tr = r(req)
         self.assertEqual(
             (tr.args, tr.kwargs, tr.target),
-            ((u'abcdef-12',), {}, 'target'))
+            ((six.u('abcdef-12'),), {}, 'target'))
 
     def test_param_pattern_path(self):
         r = route('/news/{p:path}', 'target')
@@ -135,7 +145,7 @@ class TestEndpoint(TestRouting):
         tr = r(req)
         self.assertEqual(
             (tr.args, tr.kwargs, tr.target),
-            ((u'42/news',), {}, 'target'))
+            ((six.u('42/news'),), {}, 'target'))
 
         r = route('/news/{p:path}/comments', 'target')
 
@@ -143,24 +153,28 @@ class TestEndpoint(TestRouting):
         tr = r(req)
         self.assertEqual(
             (tr.args, tr.kwargs, tr.target),
-            ((u'42/news',), {}, 'target'))
+            ((six.u('42/news'),), {}, 'target'))
+
 
 class TestRouteGroup(TestRouting):
 
     def test_reverse(self):
-        r = route('api',
+        r = route(
+            'api',
             route('news', 'news', name='news'),
             route('comments', 'comments', name='comments'))
         self.assertEqual(r.reverse('news'), '/api/news')
         self.assertEqual(r.reverse('comments'), '/api/comments')
         self.assertRaises(RouteReversalError, r.reverse, 'a')
 
-        r = route('api',
+        r = route(
+            'api',
             route('news/{id}/', 'news', name='news'),
             route('comments', 'comments', name='comments'))
         self.assertEqual(r.reverse('news', 'hello'), '/api/news/hello/')
 
-        r = route('api',
+        r = route(
+            'api',
             route(GET, 'news', name='get-news'),
             route(POST, 'news', name='create-news'))
         self.assertEqual(r.reverse('get-news'), '/api')
@@ -168,10 +182,12 @@ class TestRouteGroup(TestRouting):
 
     def test_custom_url_pattern_cls(self):
         from routr.urlpattern import URLPattern
+
         class MyURLPattern(URLPattern):
             pass
 
-        r = route('api',
+        r = route(
+            'api',
             route(GET, 'news', 'news', name='get-news'),
             route(POST, 'news', 'news', name='create-news'),
             url_pattern_cls=MyURLPattern)
@@ -179,7 +195,6 @@ class TestRouteGroup(TestRouting):
         self.assertTrue(isinstance(r.pattern, MyURLPattern))
         for r in r.routes:
             self.assertTrue(isinstance(r.pattern, MyURLPattern))
-
 
     def test_reverse_empty_pattern(self):
         r = route(route('news', name='news'))
@@ -207,43 +222,46 @@ class TestRouteGroup(TestRouting):
         self.assertNoMatch(r, '/ne')
 
     def test_group_inexact_pattern(self):
-        r = route('news',
-                route('{id:int}',
-                    route('comments', 'view')))
+        r = route(
+            'news',
+            route('{id:int}',
+            route('comments', 'view')))
         req = Request.blank('/news/42/comments')
         tr = r(req)
         self.assertEqual(
-                (tr.args, tr.kwargs, tr.endpoint.target),
-                ((42,), {}, 'view'))
+            (tr.args, tr.kwargs, tr.endpoint.target),
+            ((42,), {}, 'view'))
 
-        r = route('news/{id:int}',
-                route('comments', 'view'))
+        r = route('news/{id:int}', route('comments', 'view'))
         req = Request.blank('/news/42/comments')
         tr = r(req)
         self.assertEqual(
-                (tr.args, tr.kwargs, tr.endpoint.target),
-                ((42,), {}, 'view'))
+            (tr.args, tr.kwargs, tr.endpoint.target),
+            ((42,), {}, 'view'))
 
-        r = route('news',
-                route('{id:int}/comments', 'view'))
+        r = route('news', route('{id:int}/comments', 'view'))
         req = Request.blank('/news/42/comments')
         tr = r(req)
         self.assertEqual(
-                (tr.args, tr.kwargs, tr.endpoint.target),
-                ((42,), {}, 'view'))
+            (tr.args, tr.kwargs, tr.endpoint.target),
+            ((42,), {}, 'view'))
 
     def test_complex_match(self):
         def news():
             return 'news'
+
         def comments():
             return 'comments'
+
         def api_news():
             return 'api_news'
+
         def api_comments():
             return 'api_comments'
 
         r = route(
-            route('api',
+            route(
+                'api',
                 route('news', 'api_news'),
                 route('comments', 'api_comments')),
             route('news', 'news'),
@@ -274,7 +292,8 @@ class TestRouteGroup(TestRouting):
             ((), {}, 'api_comments'))
 
     def test_by_method(self):
-        r = route('api',
+        r = route(
+            'api',
             route(GET, 'news_get'),
             route(POST, 'news_post'))
 
@@ -323,6 +342,7 @@ class TestRouteGroup(TestRouting):
 
     def test_guards(self):
         pass
+
 
 class TestRouteDirective(TestCase):
 
@@ -390,7 +410,8 @@ class TestRouteDirective(TestCase):
         self.assertIsInstance(r, RouteGroup)
 
     def test_route_list(self):
-        r = route('api',
+        r = route(
+            'api',
             route('news', 'myapp.api.news'),
             route('comments', 'myapp.api.comments'))
         self.assertEqual(r.guards, [])
@@ -398,7 +419,8 @@ class TestRouteDirective(TestCase):
         self.assertIsInstance(r, RouteGroup)
 
     def test_route_list_guards(self):
-        r = route('api',
+        r = route(
+            'api',
             id,
             route('news', 'myapp.api.news'),
             route('comments', 'myapp.api.comments'))
@@ -408,6 +430,7 @@ class TestRouteDirective(TestCase):
 
     def test_invalid_routes(self):
         self.assertRaises(RouteConfigurationError, route)
+
 
 class TestURLPattern(TestCase):
 
@@ -454,27 +477,34 @@ class TestURLPattern(TestCase):
         self.assertRaises(NoURLPatternMatched, p.match, '/a')
         self.assertRaises(NoURLPatternMatched, p.match, '/a/abc/b/')
 
+
 class TestPositionalArgs(TestCase):
 
     def test_func(self):
         def f(a, b, c):
             pass
         self.assertEqual(positional_args(f), ['a', 'b', 'c'])
+
         def f(a, b, c, d=1):
             pass
         self.assertEqual(positional_args(f), ['a', 'b', 'c'])
+
         def f(a, b, c, **kw):
             pass
         self.assertEqual(positional_args(f), ['a', 'b', 'c'])
+
         def f(*args):
             pass
         self.assertEqual(positional_args(f), [])
+
         def f(*args, **kw):
             pass
         self.assertEqual(positional_args(f), [])
+
         def f(a, b, c, *args):
             pass
         self.assertEqual(positional_args(f), ['a', 'b', 'c'])
+
         def f(a, b, c, *args, **kw):
             pass
         self.assertEqual(positional_args(f), ['a', 'b', 'c'])
@@ -515,6 +545,7 @@ class TestPositionalArgs(TestCase):
         f = f().method
         self.assertEqual(positional_args(f), ['a', 'b', 'c'])
 
+
 class TestInjectArgs(TestCase):
 
     def test_simple(self):
@@ -523,11 +554,13 @@ class TestInjectArgs(TestCase):
         self.assertEqual(
             inject_args(f, ['a'], user='user', request='request'),
             ['user', 'a', 'request'])
+
         def f(a, request):
             pass
         self.assertEqual(
             inject_args(f, ['a'], user='user', request='request'),
             ['a', 'request'])
+
         def f(user, a):
             pass
         self.assertEqual(

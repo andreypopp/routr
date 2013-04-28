@@ -7,10 +7,12 @@
 
 from webob import exc
 
+
 __all__ = (
     'NoMatchFound', 'NoURLPatternMatched', 'RouteGuarded', 'MethodNotAllowed',
     'RouteConfigurationError', 'InvalidRoutePattern',
     'RouteReversalError')
+
 
 class NoMatchFound(Exception):
     """ Raised when request wasn't matched against any route
@@ -21,10 +23,12 @@ class NoMatchFound(Exception):
 
     response = NotImplemented
 
+
 class NoURLPatternMatched(NoMatchFound):
     """ Raised when request wasn't matched against any URL pattern"""
 
     response = exc.HTTPNotFound()
+
 
 class RouteGuarded(NoMatchFound):
     """ Raised when request was matched against URL pattern of one or more
@@ -39,10 +43,12 @@ class RouteGuarded(NoMatchFound):
         self.reason = reason
         self.response = response
 
+
 class MethodNotAllowed(NoMatchFound):
     """ Raised when request was matched but request method isn't allowed"""
 
     response = exc.HTTPMethodNotAllowed()
+
 
 class RouteConfigurationError(Exception):
     """ Routes were configured improperly
@@ -51,8 +57,10 @@ class RouteConfigurationError(Exception):
     during runtime.
     """
 
+
 class InvalidRoutePattern(RouteConfigurationError):
     """ Route configured with invalid route pattern"""
+
 
 class RouteReversalError(Exception):
     """ Cannot reverse route"""

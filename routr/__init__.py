@@ -9,8 +9,13 @@
 """
 
 import re
-from urllib import urlencode
+
 from pkg_resources import iter_entry_points
+
+try:
+    from urllib.parse import urlencode
+except ImportError:
+    from urllib import urlencode
 
 from webob.exc import HTTPException, HTTPBadRequest
 from routr.utils import import_string, cached_property
@@ -20,22 +25,25 @@ from routr.exc import (
     MethodNotAllowed, RouteConfigurationError, InvalidRoutePattern,
     RouteReversalError)
 
+
 __all__ = (
     'Configuration', 'route', 'include', 'plug', 'Trace',
     'Route', 'Endpoint', 'RouteGroup', 'HTTPMethod',
     'GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'PATCH',
     'NoMatchFound', 'RouteConfigurationError')
 
+
 class HTTPMethod(str):
     """ HTTP method
 
-    Objects of this type represent HTTP method constants. They are also callable
-    -- work as a shortcut for defining route with corresponding method --
-    ``route(GET, ...)`` equivalent to ``GET(...)``.
+    Objects of this type represent HTTP method constants. They are also
+    callable -- work as a shortcut for defining route with corresponding
+    method -- ``route(GET, ...)`` equivalent to ``GET(...)``.
     """
 
     def __call__(self, *args, **kwargs):
         return route(self, *args, **kwargs)
+
 
 GET     = HTTPMethod('GET')
 POST    = HTTPMethod('POST')
@@ -45,6 +53,7 @@ HEAD    = HTTPMethod('HEAD')
 OPTIONS = HTTPMethod('OPTIONS')
 TRACE   = HTTPMethod('TRACE')
 PATCH   = HTTPMethod('PATCH')
+
 
 class Trace(object):
     """ Result of route matching
@@ -93,8 +102,7 @@ class Trace(object):
         payload.update({
             'args': args,
             'kwargs': kwargs,
-            'routes': routes,
-            })
+            'routes': routes})
         return self.__class__(args, kwargs, routes, payload)
 
     def __setattr__(self, name, value):
@@ -104,6 +112,7 @@ class Trace(object):
         if not name in self.payload:
             raise AttributeError(name)
         return self.payload[name]
+
 
 class Route(object):
     """ Base class for routes
@@ -195,6 +204,7 @@ class Route(object):
     def __iter__(self):
         raise NotImplementedError()
 
+
 class Endpoint(Route):
     """ Endpoint route
 
@@ -212,8 +222,7 @@ class Endpoint(Route):
         otherwise ``None`` is allowed
     """
 
-    def __init__(self, target, method, name, guards, pattern,
-            **annotations):
+    def __init__(self, target, method, name, guards, pattern, **annotations):
         super(Endpoint, self).__init__(guards, pattern, **annotations)
         self.target = target
         self.method = method
@@ -250,6 +259,7 @@ class Endpoint(Route):
 
     __str__ = __repr__
 
+
 class RouteGroup(Route):
     """ Route which represents a group of other routes
 
@@ -262,9 +272,9 @@ class RouteGroup(Route):
     """
 
     def __init__(self, routes, guards, pattern, url_pattern_cls=None,
-            **annotations):
-        super(RouteGroup, self).__init__(guards, pattern,
-                url_pattern_cls=url_pattern_cls, **annotations)
+                 **annotations):
+        super(RouteGroup, self).__init__(
+            guards, pattern, url_pattern_cls=url_pattern_cls, **annotations)
         self.routes = routes
 
     def index(self):
@@ -316,19 +326,19 @@ class RouteGroup(Route):
                 subtrace = subroute.match(path_info, request)
             except NoURLPatternMatched:
                 continue
-            except MethodNotAllowed, e:
+            except MethodNotAllowed as e:
                 guarded.append(RouteGuarded(e, e.response))
                 continue
-            except RouteGuarded, e:
+            except RouteGuarded as e:
                 guarded.append(e)
                 continue
-            except HTTPException, e:
+            except HTTPException as e:
                 guarded.append(RouteGuarded(e, e))
                 continue
             else:
                 return ((trace + subtrace)
-                    if subtrace is not None and trace is not None
-                    else trace or subtrace)
+                        if subtrace is not None and trace is not None
+                        else trace or subtrace)
         if guarded:
             # NOTE we raise only last guard failure
             # cause it's more interesting one
@@ -344,6 +354,7 @@ class RouteGroup(Route):
 
     __str__ = __repr__
 
+
 def include(spec):
     """ Include routes by ``spec``
 
@@ -355,6 +366,7 @@ def include(spec):
         raise RouteConfigurationError(
             "route included by '%s' isn't a route" % spec)
     return r
+
 
 def plug(name):
     """ Plug routes by ``setuptools`` entry points, identified by ``name``
@@ -370,6 +382,7 @@ def plug(name):
                 "entry point '%s' doesn't point at Route instance" % p)
         routes.append(r)
     return RouteGroup(routes, [])
+
 
 def route(*args, **kwargs):
     """ Directive for configuring routes in application
@@ -405,7 +418,7 @@ def route(*args, **kwargs):
     if len(args) == 1 and not isinstance(args[0], Route):
         target = args[0]
         return Endpoint(target, method, name, [], None,
-                url_pattern_cls=url_pattern_cls, **kwargs)
+                        url_pattern_cls=url_pattern_cls, **kwargs)
 
     elif (
             len(args) == 2
@@ -413,7 +426,7 @@ def route(*args, **kwargs):
             and not isinstance(args[1], Route)):
         pattern, target = args
         return Endpoint(target, method, name, [], pattern,
-                url_pattern_cls=url_pattern_cls, **kwargs)
+                        url_pattern_cls=url_pattern_cls, **kwargs)
 
     else:
         if isinstance(args[0], str):
@@ -432,15 +445,15 @@ def route(*args, **kwargs):
                     if r.url_pattern_cls is None:
                         r.url_pattern_cls = url_pattern_cls
             return RouteGroup(routes, guards, pattern,
-                    url_pattern_cls=url_pattern_cls, **kwargs)
+                              url_pattern_cls=url_pattern_cls, **kwargs)
         elif len(args) == 1:
             target = args[0]
             return Endpoint(target, method, name, guards,
-                    pattern, url_pattern_cls=url_pattern_cls, **kwargs)
+                            pattern, url_pattern_cls=url_pattern_cls, **kwargs)
         elif not args and guards:
             target = guards.pop()
             return Endpoint(target, method, name, guards,
-                    pattern, url_pattern_cls=url_pattern_cls, **kwargs)
+                            pattern, url_pattern_cls=url_pattern_cls, **kwargs)
         else:
             raise RouteConfigurationError(
                 "improper usage of 'route' directive")
