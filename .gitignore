@@ -1,5 +1,8 @@
 *.egg-info
-_build
 *.py[co]
-dist/
+
+_build
+
 build/
+env*/
+dist/
