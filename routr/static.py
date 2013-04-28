@@ -13,7 +13,9 @@ from webob import Response
 from webob.static import FileApp
 from routr import route, GET
 
+
 __all__ = ('static',)
+
 
 class _ForceResponse(Response):
 
@@ -22,6 +24,7 @@ class _ForceResponse(Response):
 
     def __call__(self, environ, start_response):
         return self.underlying(environ, start_response)
+
 
 def static(prefix, directory, **kw):
     """ Define a route which serves static assets
@@ -38,9 +41,10 @@ def static(prefix, directory, **kw):
         GET, '%s/{path:path}' % prefix,
         make_static_view(directory), **kw)
 
+
 def make_static_view(directory):
     def static_view(request, path):
         """ View for serving static files"""
         return _ForceResponse(FileApp(join(directory, path))(request))
-    static_view.static_view = True # b/c
+    static_view.static_view = True  # b/c
     return static_view

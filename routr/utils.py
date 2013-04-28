@@ -158,8 +158,8 @@ def positional_args(obj):
 def _positional_args(func):
     argspec = inspect.getargspec(func)
     return (argspec.args[:-len(argspec.defaults)]
-        if argspec.defaults
-        else argspec.args)
+            if argspec.defaults
+            else argspec.args)
 
 
 def inject_args(obj, args, **injections):

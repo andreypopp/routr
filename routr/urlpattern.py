@@ -9,9 +9,11 @@ import re
 
 from routr.utils import cached_property, join
 from routr.exc import (
-        InvalidRoutePattern, RouteReversalError, NoURLPatternMatched)
+    InvalidRoutePattern, RouteReversalError, NoURLPatternMatched)
+
 
 __all__ = ('URLPattern',)
+
 
 def parse_args(line):
     args = []
@@ -26,6 +28,7 @@ def parse_args(line):
             args.append(item)
     return args, kwargs
 
+
 def handle_str(args):
     args, kwargs = parse_args(args)
     re = kwargs.pop('re', None)
@@ -35,15 +38,18 @@ def handle_str(args):
         return (re + '(?=$|/)', None)
     return ('[^/]+', None)
 
+
 def handle_path(args):
     if args:
         raise InvalidRoutePattern("'path' type doesn't accept args")
     return ('.*', None)
 
+
 def handle_int(args):
     if args:
         raise InvalidRoutePattern("'path' type doesn't accept args")
     return ('[0-9]+', int)
+
 
 def handle_any(args):
     args, kwargs = parse_args(args)
@@ -53,6 +59,7 @@ def handle_any(args):
         raise InvalidRoutePattern("'any' doesn't accept keyword args")
 
     return ('(' + '|'.join('(' + re.escape(x) + ')' for x in args) + ')', None)
+
 
 class URLPattern(object):
 
@@ -65,14 +72,13 @@ class URLPattern(object):
         \))?
         }""", re.VERBOSE)
 
-
     typemap = {
-        None:       handle_str,
-        'str':      handle_str,
-        'string':   handle_str,
-        'path':     handle_path,
-        'int':      handle_int,
-        'any':      handle_any,
+        None:     handle_str,
+        'str':    handle_str,
+        'string': handle_str,
+        'path':   handle_path,
+        'int':    handle_int,
+        'any':    handle_any,
     }
 
     def __init__(self, pattern):
