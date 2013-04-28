@@ -18,11 +18,11 @@ setup(
     url='http://routr.readthedocs.org/',
     license='BSD',
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
-    install_requires=filter(None, [
+    install_requires=list(filter(None, [
         'WebOb >= 1.2b3',
         'six >= 1.3.0',
         'unittest2 == 0.5.1' if is_py26 else None,
-    ]),
+    ])),
     include_package_data=True,
     test_suite='routr.tests',
     zip_safe=False)
