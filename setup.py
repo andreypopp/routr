@@ -17,6 +17,16 @@ setup(
     author_email='8mayday@gmail.com',
     url='http://routr.readthedocs.org/',
     license='BSD',
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Environment :: Web Environment',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: BSD License',
+        'Operating System :: OS Independent',
+        'Topic :: Software Development :: Libraries',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 2',
+    ],
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
     install_requires=list(filter(None, [
         'WebOb >= 1.2b3',
