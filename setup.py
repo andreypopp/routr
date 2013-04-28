@@ -1,7 +1,12 @@
-from setuptools import setup, find_packages
-import sys, os
+import os
+import sys
 
+from setuptools import find_packages, setup
+
+
+is_py26 = sys.version_info[:2] == (2, 6)
 version = '0.6.2'
+
 
 setup(
     name='routr',
@@ -13,10 +18,11 @@ setup(
     url='http://routr.readthedocs.org/',
     license='BSD',
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
-    install_requires=[
+    install_requires=filter(None, [
         'WebOb >= 1.2b3',
         'six >= 1.3.0',
-    ],
+        'unittest2 == 0.5.1' if is_py26 else None,
+    ]),
     include_package_data=True,
     test_suite='routr.tests',
     zip_safe=False)

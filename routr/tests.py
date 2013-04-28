@@ -5,7 +5,11 @@
 
 """
 
-from unittest import TestCase
+try:
+    from unittest2 import TestCase
+except ImportError:
+    from unittest import TestCase
+
 from webob import Request, exc
 
 from routr import Route, Endpoint, RouteGroup, URLPattern
