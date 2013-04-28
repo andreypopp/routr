@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 
 
 is_py26 = sys.version_info[:2] == (2, 6)
-version = '0.6.2'
+version = '0.7.0'
 
 
 setup(
