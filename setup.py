@@ -15,6 +15,7 @@ setup(
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
     install_requires=[
         'WebOb >= 1.2b3',
+        'six >= 1.3.0',
     ],
     include_package_data=True,
     test_suite='routr.tests',
