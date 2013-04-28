@@ -9,8 +9,13 @@
 """
 
 import re
-from urllib import urlencode
+
 from pkg_resources import iter_entry_points
+
+try:
+    from urllib.parse import urlencode
+except ImportError:
+    from urllib import urlencode
 
 from webob.exc import HTTPException, HTTPBadRequest
 from routr.utils import import_string, cached_property
@@ -316,13 +321,13 @@ class RouteGroup(Route):
                 subtrace = subroute.match(path_info, request)
             except NoURLPatternMatched:
                 continue
-            except MethodNotAllowed, e:
+            except MethodNotAllowed as e:
                 guarded.append(RouteGuarded(e, e.response))
                 continue
-            except RouteGuarded, e:
+            except RouteGuarded as e:
                 guarded.append(e)
                 continue
-            except HTTPException, e:
+            except HTTPException as e:
                 guarded.append(RouteGuarded(e, e))
                 continue
             else:

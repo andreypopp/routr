@@ -1,17 +1,21 @@
 """
 
-    routr.utilities -- utility code
-    ===============================
+    routr.utils -- utility code
+    ===========================
 
 """
 
-import types
 import inspect
+import types
 import sys
+
+from six import reraise
+
 
 __all__ = (
     'import_string', 'cached_property', 'ImportStringError', 'join',
     'positional_args', 'inject_args')
+
 
 class cached_property(object):
     """ Just like ``property`` but computed only once"""
@@ -27,6 +31,7 @@ class cached_property(object):
         val = self.func(obj)
         obj.__dict__[self.__name__] = val
         return val
+
 
 def import_string(import_name, silent=False):
     """Imports an object based on a string.  This is useful if you want to
@@ -68,9 +73,10 @@ def import_string(import_name, silent=False):
             modname = module + '.' + obj
             __import__(modname)
             return sys.modules[modname]
-    except ImportError, e:
+    except ImportError as e:
         if not silent:
-            raise ImportStringError(import_name, e), None, sys.exc_info()[2]
+            reraise(ImportStringError(import_name, e), None, sys.exc_info()[2])
+
 
 class ImportStringError(ImportError):
     """Provides information about a failed :func:`import_string` attempt.
@@ -117,6 +123,7 @@ class ImportStringError(ImportError):
         return '<%s(%r, %r)>' % (self.__class__.__name__, self.import_name,
                                  self.exception)
 
+
 def join(a, b):
     """ Join two URL parts
 
@@ -124,9 +131,8 @@ def join(a, b):
         '/a/b/'
 
     """
-    a = a or ''
-    b = b or ''
-    return a.rstrip('/') + '/' + b.lstrip('/')
+    return (a or '').rstrip('/') + '/' + (b or '').lstrip('/')
+
 
 def positional_args(obj):
     """ Return ordered list of positional args with which ``obj`` can be called
@@ -148,11 +154,13 @@ def positional_args(obj):
         args.remove('self')
     return args
 
+
 def _positional_args(func):
     argspec = inspect.getargspec(func)
     return (argspec.args[:-len(argspec.defaults)]
         if argspec.defaults
         else argspec.args)
+
 
 def inject_args(obj, args, **injections):
     """ Inject args for given callable ``obj``, ``args`` with ``injections``"""
