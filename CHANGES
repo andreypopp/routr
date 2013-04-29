@@ -1,3 +1,13 @@
+0.7.1
+-----
+
+* Fix Python 3 support for ``routr.utils.import_string`` shared function.
+
+0.7.0
+-----
+
+* Initial Python 3.2 and 3.3 support. Also backport to Python 2.6.
+
 0.6.2
 -----
 

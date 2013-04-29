@@ -6,10 +6,10 @@
 """
 
 import inspect
-import types
 import sys
+import types
 
-from six import reraise
+import six
 
 
 __all__ = (
@@ -52,8 +52,8 @@ def import_string(import_name, silent=False):
     :copyright: (c) 2011 by the Werkzeug Team
     """
     # force the import name to automatically convert to strings
-    if isinstance(import_name, unicode):
-        import_name = str(import_name)
+    if not six.PY3 and isinstance(import_name, six.text_type):
+        import_name = six.binary_type(import_name)
     try:
         if ':' in import_name:
             module, obj = import_name.split(':', 1)
@@ -63,7 +63,7 @@ def import_string(import_name, silent=False):
             return __import__(import_name)
         # __import__ is not able to handle unicode strings in the fromlist
         # if the module is a package
-        if isinstance(obj, unicode):
+        if not six.PY3 and isinstance(obj, six.text_type):
             obj = obj.encode('utf-8')
         try:
             return getattr(__import__(module, None, None, [obj]), obj)
@@ -75,7 +75,12 @@ def import_string(import_name, silent=False):
             return sys.modules[modname]
     except ImportError as e:
         if not silent:
-            reraise(ImportStringError(import_name, e), None, sys.exc_info()[2])
+            error = ImportStringError(import_name, e)
+            traceback = sys.exc_info()[2]
+            if six.PY3:
+                raise error.with_traceback(traceback)
+            else:
+                six.reraise(error, None, traceback)
 
 
 class ImportStringError(ImportError):

@@ -25,4 +25,16 @@ setup(
     ])),
     include_package_data=True,
     test_suite='routr.tests',
-    zip_safe=False)
+    zip_safe=False,
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Environment :: Web Environment',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: Implementation :: PyPy',
+        'Topic :: Internet :: WWW/HTTP :: WSGI'
+    ],
+    keywords='routr routes routing webob')
