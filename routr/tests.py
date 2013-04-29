@@ -17,7 +17,8 @@ from webob import Request, exc
 from routr import Route, Endpoint, RouteGroup, URLPattern
 from routr import route, RouteConfigurationError
 from routr import POST, GET
-from routr.utils import positional_args, inject_args
+from routr.utils import (
+    ImportStringError, positional_args, inject_args, import_string)
 from routr.exc import (
     NoURLPatternMatched, RouteGuarded, MethodNotAllowed, RouteReversalError)
 
@@ -566,3 +567,26 @@ class TestInjectArgs(TestCase):
         self.assertEqual(
             inject_args(f, ['a'], user='user', request='request'),
             ['user', 'a'])
+
+
+class TestImportString(TestCase):
+
+    def test_error(self):
+        self.assertRaises(ImportStringError,
+                          import_string,
+                          'does_not_exist.exe')
+        self.assertRaises(ImportError, import_string, 'does_not_exist.exe')
+
+    def test_success(self):
+        module = import_string('six')
+        self.assertEqual(module, six)
+
+        klass = import_string('routr.Route')
+        self.assertEqual(klass, Route)
+
+    def test_unicode(self):
+        module = import_string(six.u('six'))
+        self.assertEqual(module, six)
+
+        klass = import_string(six.u('routr.Route'))
+        self.assertEqual(klass, Route)

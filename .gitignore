@@ -3,6 +3,7 @@
 *.py[co]
 
 _build
+.coverage
 
 build/
 env*/
