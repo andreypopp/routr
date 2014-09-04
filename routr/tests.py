@@ -70,6 +70,10 @@ class TestEndpoint(TestRouting):
         self.assertEqual(r.reverse('news', 42), '/news/42/')
         self.assertRaises(RouteReversalError, r.reverse, 'news2')
 
+        r = route('news/{news_id:int}/', 'target', name='news')
+        self.assertEqual(r.reverse('news', 42), '/news/42/')
+        self.assertRaises(RouteReversalError, r.reverse, 'news2')
+
         r = route('news/{any(login,attach,app_login,access_token)}',
                   'target', name='news')
         self.assertEqual(r.reverse('news', 'aa'), '/news/aa')

@@ -65,8 +65,8 @@ class URLPattern(object):
 
     _type_re = re.compile("""
         {
-        (?P<label>[a-zA-Z][a-zA-Z0-9]*)     # label
-        (:(?P<type>[a-zA-Z][a-zA-Z0-9]*))?  # optional type identifier
+        (?P<label>[a-zA-Z][a-zA-Z_0-9]*)     # label
+        (:(?P<type>[a-zA-Z][a-zA-Z_0-9]*))?  # optional type identifier
         (\(                                 # optional args
             (?P<args>[a-zA-Z= ,_\[\]\+\-0-9\{\}]*)
         \))?
